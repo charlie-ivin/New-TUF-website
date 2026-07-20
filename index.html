@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="page-home">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday</div>
+  <div class="nav-links">
+    <a href="index.html" class="current">Home</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="apply.html">Apply to Join</a>
+    <a href="timeline.html">Timeline</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1 id="hero-heading"></h1>
+  <p class="intro" id="hero-paragraph"></p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="timetable.html">See this week's timetable</a>
+    <a class="btn btn-outline" href="apply.html">Join the team</a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>How it works</h2>
+  <div class="steps" id="steps"></div>
+</section>
+
+<section class="treats">
+  <h2 id="treats-heading"></h2>
+  <p id="treats-text"></p>
+  <div class="treat-icons">
+    <span>🧁</span>
+    <span>🍫</span>
+    <span>🍪</span>
+    <span>👍</span>
+  </div>
+  <a class="btn btn-primary" href="timetable.html">View Timetable</a>
+</section>
+
+<footer></footer>
+
+<script src="assets/site.js"></script>
+<script>
+  fetch('content/home.json')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('hero-heading').textContent = data.hero_heading;
+      document.getElementById('hero-paragraph').textContent = data.hero_paragraph;
+      document.getElementById('treats-heading').textContent = data.treats_heading;
+      document.getElementById('treats-text').textContent = data.treats_text;
+
+      const stepsEl = document.getElementById('steps');
+      data.steps.forEach(step => {
+        stepsEl.innerHTML += `
+          <div class="step">
+            <span class="num">${step.number}</span>
+            <h3>${step.title}</h3>
+            <p>${step.text}</p>
+          </div>`;
+      });
+    });
+</script>
+
+</body>
+</html>
