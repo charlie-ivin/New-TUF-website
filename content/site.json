@@ -1,10 +1,19 @@
 {
-  "external_links": [
-    { "label": "TUF Register", "url": "https://docs.google.com/spreadsheets/d/1R7_71nVOLdocqbKiXY1IwyIRn_LudvZw7CSWH6aljp4/edit?usp=sharing" },
-    { "label": "Give Us Feedback", "url": "https://docs.google.com/forms/d/e/1FAIpQLSfANDf8z86xjkAsHtEPeBegKZEn1Ryh23XqSIilnsjIjfPYHQ/viewform?usp=sf_link" },
-    { "label": "Bakers Info Hub", "url": "https://docs.google.com/document/d/1Jbi0meiJYMbLqnejsCXOcDKfPdF8r_YvUIlHKwFMLQs/edit?tab=t.0" }
-  ],
   "footer_text": "Cottesloe School — Thumbs Up Friday",
   "footer_credit_label": "Website By Charlie Ivin",
-  "footer_credit_url": "https://portfolio.charlieivin.co.uk/"
+  "footer_credit_url": "https://portfolio.charlieivin.co.uk",
+  "external_links": [
+    {
+      "label": "TUF Register",
+      "url": "https://docs.google.com/spreadsheets/d/1R7_71nVOLdocqbKiXY1IwyIRn_LudvZw7CSWH6aljp4/edit?usp=sharing"
+    },
+    {
+      "label": "Give Us Feedback",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSfANDf8z86xjkAsHtEPeBegKZEn1Ryh23XqSIilnsjIjfPYHQ/viewform?usp=sf_link"
+    },
+    {
+      "label": "Bakers Info Hub",
+      "url": "https://docs.google.com/document/d/1Jbi0meiJYMbLqnejsCXOcDKfPdF8r_YvUIlHKwFMLQs/edit?tab=t.0"
+    }
+  ]
 }
