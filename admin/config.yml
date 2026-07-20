@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: YOUR-GITHUB-USERNAME/YOUR-REPO-NAME   # <-- change this
+  repo: charlie-ivin/New-TUF-website
   branch: main
 
 media_folder: "assets/images"
