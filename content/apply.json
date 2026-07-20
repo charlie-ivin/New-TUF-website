@@ -1,11 +1,27 @@
 {
   "hero_heading": "Help us cook, bake, and hand out the Thumbs Up Friday's under the Canopy.",
-  "intro": "The Thumbs Up Friday team runs the whole scheme! baking, serving, and keeping the cards moving every week. It's real hands-on experience, it counts toward volunteering hours, and it's a genuinely great group of people to be part of.",
+  "intro": "IMPORTANT: Applications Close End Of September 2026\n\nThe Thumbs Up Friday team runs the whole scheme! baking, serving, and keeping the cards moving every week. It's real hands-on experience, it counts toward volunteering hours, and it's a genuinely great group of people to be part of.",
   "why_cards": [
-    { "icon": "🎖️", "title": "Duke of Edinburgh", "text": "Regular weekly volunteering that counts straight toward your DofE Volunteering section — logged and signed off." },
-    { "icon": "🤝", "title": "Real volunteering hours", "text": "Build up a genuine, ongoing record of volunteering for your CV, college applications, or personal statement." },
-    { "icon": "🧑‍🍳", "title": "Kitchen & baking skills", "text": "Learn to bake properly, work safely in a kitchen, and cook for a crowd — skills that actually transfer." },
-    { "icon": "🌟", "title": "Leadership experience", "text": "Take on responsibility for a weekly event — organising, serving, and representing the scheme to the whole school." }
+    {
+      "icon": "🎖️",
+      "title": "Duke of Edinburgh",
+      "text": "Regular weekly volunteering that counts straight toward your DofE Volunteering section — logged and signed off."
+    },
+    {
+      "icon": "🤝",
+      "title": "Real volunteering hours",
+      "text": "Build up a genuine, ongoing record of volunteering for your CV, college applications, or personal statement."
+    },
+    {
+      "icon": "🧑‍🍳",
+      "title": "Kitchen & baking skills",
+      "text": "Learn to bake properly, work safely in a kitchen, and cook for a crowd — skills that actually transfer."
+    },
+    {
+      "icon": "🌟",
+      "title": "Leadership experience",
+      "text": "Take on responsibility for a weekly event — organising, serving, and representing the scheme to the whole school."
+    }
   ],
   "quotes": [
     "Thumbs Up Friday is honestly the highlight of my week — you get to see how happy people are when they get their reward.",
