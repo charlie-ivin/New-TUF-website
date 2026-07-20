@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="page-timeline">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday</div>
+  <div class="nav-links">
+    <a href="/index.html">Home</a>
+    <a href="/timetable.html">Timetable</a>
+    <a href="/apply.html">Apply to Join</a>
+    <a href="/timeline.html" class="current">Timeline</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <span class="eyebrow">Our Story</span>
+  <h1>Timeline</h1>
+  <p class="intro">A quick history of Thumbs Up Friday — how it started and where it's got to.</p>
+</section>
+
+<section class="section">
+  <div class="timeline-box">
+    <div class="timeline" id="timeline"></div>
+  </div>
+</section>
+
+<footer></footer>
+
+<script src="/assets/site.js"></script>
+<script>
+  fetch('/content/timeline.json')
+    .then(r => r.json())
+    .then(data => {
+      const timelineEl = document.getElementById('timeline');
+      data.events.forEach(event => {
+        timelineEl.innerHTML += `
+          <div class="tl-row">
+            <div class="tl-date">${event.date}</div>
+            <div class="tl-line"><span class="tl-dot"></span></div>
+            <div class="tl-event"><strong>${event.title}</strong>${event.text}</div>
+          </div>`;
+      });
+    });
+</script>
+
+</body>
+</html>

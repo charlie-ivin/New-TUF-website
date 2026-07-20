@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply to Join — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="page-apply">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday</div>
+  <div class="nav-links">
+    <a href="/index.html">Home</a>
+    <a href="/timetable.html">Timetable</a>
+    <a href="/apply.html" class="current">Apply to Join</a>
+    <a href="/timeline.html">Timeline</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <span class="eyebrow">Join the team</span>
+  <h1 id="hero-heading"></h1>
+  <p class="intro" id="intro"></p>
+</section>
+
+<section class="section">
+  <h2>Why join the team</h2>
+  <div class="why-grid" id="why-grid"></div>
+</section>
+
+<section class="section">
+  <div class="team-strip">
+    <h2>A great team of people</h2>
+    <div class="quotes" id="quotes"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="apply-box">
+    <h2>Ready to apply?</h2>
+    <p id="apply-note"></p>
+    <p class="apply-email">Email us at <a id="apply-email" href="#"></a> to apply.</p>
+  </div>
+</section>
+
+<footer></footer>
+
+<script src="/assets/site.js"></script>
+<script>
+  fetch('/content/apply.json')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('hero-heading').textContent = data.hero_heading;
+      document.getElementById('intro').textContent = data.intro;
+      document.getElementById('apply-note').textContent = data.apply_note;
+
+      const emailEl = document.getElementById('apply-email');
+      emailEl.href = `mailto:${data.apply_email}`;
+      emailEl.textContent = data.apply_email;
+
+      const whyGrid = document.getElementById('why-grid');
+      data.why_cards.forEach(card => {
+        whyGrid.innerHTML += `
+          <div class="why-card">
+            <span class="icon">${card.icon}</span>
+            <h3>${card.title}</h3>
+            <p>${card.text}</p>
+          </div>`;
+      });
+
+      const quotesEl = document.getElementById('quotes');
+      data.quotes.forEach(quote => {
+        quotesEl.innerHTML += `
+          <div class="quote">
+            "${quote}"
+            <span class="who">— Team Member</span>
+          </div>`;
+      });
+    });
+</script>
+
+</body>
+</html>

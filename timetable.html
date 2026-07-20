@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timetable — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="page-timetable">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday</div>
+  <div class="nav-links">
+    <a href="/index.html">Home</a>
+    <a href="/timetable.html" class="current">Timetable</a>
+    <a href="/apply.html">Apply to Join</a>
+    <a href="/timeline.html">Timeline</a>
+  </div>
+</nav>
+
+<section class="timetable-section">
+  <span class="eyebrow">This Week</span>
+  <h1>Timetable</h1>
+  <p class="intro" id="intro"></p>
+
+  <div class="info-strip">
+    <div class="info-card">
+      <div class="label">Day</div>
+      <div class="value" id="day"></div>
+    </div>
+    <div class="info-card">
+      <div class="label">Location</div>
+      <div class="value" id="location"></div>
+    </div>
+    <div class="info-card">
+      <div class="label">What to bring</div>
+      <div class="value" id="what-to-bring"></div>
+    </div>
+  </div>
+
+  <div class="calendar-wrap">
+    <iframe id="calendar-iframe" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+  </div>
+</section>
+
+<footer></footer>
+
+<script src="/assets/site.js"></script>
+<script>
+  fetch('/content/timetable.json')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('intro').textContent = data.intro;
+      document.getElementById('day').textContent = data.day;
+      document.getElementById('location').textContent = data.location;
+      document.getElementById('what-to-bring').textContent = data.what_to_bring;
+      document.getElementById('calendar-iframe').src = data.calendar_embed_url;
+    });
+</script>
+
+</body>
+</html>
