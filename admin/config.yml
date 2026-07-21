@@ -1,4 +1,6 @@
 app_title: "Thumbs Up Friday — Editor"
+logo:
+  src: "/assets/TUF.png"
 
 backend:
   name: github
