@@ -1,6 +1,6 @@
 app_title: "Thumbs Up Friday Web Editor"
 logo:
-  src: "/assets/TUF.png"
+  src: "/assets/images/logo.svg"
 
 backend:
   name: github
@@ -79,7 +79,9 @@ collections:
           - label: "Team Quotes"
             name: "quotes"
             widget: "list"
-            field: { label: "Quote", name: "quote", widget: "text" }
+            fields:
+              - { label: "Quote", name: "quote", widget: "text" }
+              - { label: "Name", name: "name", widget: "string", default: "Team Member" }
           - { label: "Apply Box Note", name: "apply_note", widget: "text" }
           - { label: "Apply Email Address", name: "apply_email", widget: "string" }
 
