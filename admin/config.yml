@@ -1,3 +1,5 @@
+app_title: "Thumbs Up Friday — Editor"
+
 backend:
   name: github
   repo: charlie-ivin/New-TUF-website
