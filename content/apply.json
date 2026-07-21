@@ -1,17 +1,86 @@
-{
-  "hero_heading": "Help us cook, bake, and hand out the Thumbs Up Friday's under the Canopy.",
-  "intro": "The Thumbs Up Friday team runs the whole scheme! baking, serving, and keeping the cards moving every week. It's real hands-on experience, it counts toward volunteering hours, and it's a genuinely great group of people to be part of.",
-  "why_cards": [
-    { "icon": "🎖️", "title": "Duke of Edinburgh", "text": "Regular weekly volunteering that counts straight toward your DofE Volunteering section — logged and signed off." },
-    { "icon": "🤝", "title": "Real volunteering hours", "text": "Build up a genuine, ongoing record of volunteering for your CV, college applications, or personal statement." },
-    { "icon": "🧑‍🍳", "title": "Kitchen & baking skills", "text": "Learn to bake properly, work safely in a kitchen, and cook for a crowd — skills that actually transfer." },
-    { "icon": "🌟", "title": "Leadership experience", "text": "Take on responsibility for a weekly event — organising, serving, and representing the scheme to the whole school." }
-  ],
-  "quotes": [
-    { "quote": "Thumbs Up Friday is honestly the highlight of my week — you get to see how happy people are when they get their reward.", "name": "Team Member" },
-    { "quote": "I joined for the DofE hours and stayed because the team's just really good fun to be around.", "name": "Team Member" },
-    { "quote": "It's proper responsibility — we run the whole thing ourselves, start to finish.", "name": "Team Member" }
-  ],
-  "apply_note": "Responses to your application are sent during term time only — not over holidays or bank holidays, so please bear with us if you apply close to the end of term.",
-  "apply_email": "thumbs-up-friday@charlieivin.co.uk"
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply to Join — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="page-apply">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday</div>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="timetable.html">Timetable</a>
+    <a href="apply.html" class="current">Apply to Join</a>
+    <a href="timeline.html">Timeline</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <span class="eyebrow">Join the team</span>
+  <h1 id="hero-heading"></h1>
+  <p class="intro" id="intro"></p>
+</section>
+
+<section class="section">
+  <h2>Why join the team</h2>
+  <div class="why-grid" id="why-grid"></div>
+</section>
+
+<section class="section">
+  <div class="team-strip">
+    <h2>A great team of people</h2>
+    <div class="quotes" id="quotes"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="apply-box">
+    <h2>Ready to apply?</h2>
+    <p id="apply-note"></p>
+    <p class="apply-email">Email us at <a id="apply-email" href="#"></a> to apply.</p>
+  </div>
+</section>
+
+<footer></footer>
+
+<script src="assets/site.js"></script>
+<script>
+  fetch('content/apply.json')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('hero-heading').textContent = data.hero_heading;
+      document.getElementById('intro').textContent = data.intro;
+      document.getElementById('apply-note').textContent = data.apply_note;
+
+      const emailEl = document.getElementById('apply-email');
+      emailEl.href = `mailto:${data.apply_email}`;
+      emailEl.textContent = data.apply_email;
+
+      const whyGrid = document.getElementById('why-grid');
+      data.why_cards.forEach(card => {
+        whyGrid.innerHTML += `
+          <div class="why-card">
+            <span class="icon">${card.icon}</span>
+            <h3>${card.title}</h3>
+            <p>${card.text}</p>
+          </div>`;
+      });
+
+      const quotesEl = document.getElementById('quotes');
+      data.quotes.forEach(item => {
+        quotesEl.innerHTML += `
+          <div class="quote">
+            "${item.quote}"
+            <span class="who">— ${item.name}</span>
+          </div>`;
+      });
+    });
+</script>
+
+</body>
+</html>
