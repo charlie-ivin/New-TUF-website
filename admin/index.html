@@ -7,36 +7,5 @@
 </head>
 <body>
 <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
-<script>
-  // Sveltia CMS keeps a small "Powered by Sveltia CMS" credit in the login
-  // footer by design — there's no config option to remove it, so this just
-  // watches the page for that text and swaps it for our own credit once it
-  // appears. If a future Sveltia update changes their markup, this simply
-  // stops matching and the original text quietly reappears (nothing breaks).
-  (function () {
-    function swapCredit() {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-      let node;
-      while ((node = walker.nextNode())) {
-        if (
-          node.children.length === 0 &&
-          /powered\s*by/i.test(node.textContent) &&
-          /sveltia/i.test(node.textContent)
-        ) {
-          node.innerHTML =
-            'Cottesloe School — Thumbs Up Friday | Website By Charlie Ivin ' +
-            '<a href="https://portfolio.charlieivin.co.uk/" target="_blank" rel="noopener" style="color:inherit;">portfolio.charlieivin.co.uk</a>';
-          return true;
-        }
-      }
-      return false;
-    }
-
-    const observer = new MutationObserver(() => {
-      if (swapCredit()) observer.disconnect();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  })();
-</script>
 </body>
 </html>
