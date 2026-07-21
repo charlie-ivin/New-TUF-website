@@ -2,7 +2,7 @@
   "events": [
     {
       "date": "Unknown",
-      "title": "The beginning",
+      "title": "The Beginning",
       "text": "Thumbs Up Friday started."
     },
     {
@@ -12,17 +12,22 @@
     },
     {
       "date": "April 2023",
-      "title": "A change in leadership",
+      "title": "A Change In Leadership",
       "text": "Mrs Catlin left."
     },
     {
       "date": "April 2023",
-      "title": "New leadership",
+      "title": "New Leadership",
       "text": "Mrs Makin took leadership."
     },
     {
+      "date": "September 2023",
+      "title": "One Baker Joined",
+      "text": "Edie joined."
+    },
+    {
       "date": "April 2024",
-      "title": "Digital Lead appointed",
+      "title": "Digital Lead Appointed",
       "text": "Charlie Ivin joined and became Digital Lead."
     },
     {
@@ -31,33 +36,33 @@
       "text": "Izzy and Devon joined."
     },
     {
-      "date": "September 2024",
-      "title": "Four Bakers ioined",
-      "text": "Poppy, Chloe, Phoebe And Raymon joined."
-    },
-    {
       "date": "July 2025",
       "title": "One Baker Left",
       "text": "Ryan Left."
     },
     {
+      "date": "September 2024",
+      "title": "Four Bakers Joined",
+      "text": "Poppy, Chloe, Phoebe And Raymon joined."
+    },
+    {
       "date": "July 2025",
-      "title": "A change in leadership",
+      "title": "A Change In Leadership",
       "text": "Mrs Makin left."
     },
     {
       "date": "September 2025",
-      "title": "New leadership",
+      "title": "New Leadership",
       "text": "Mrs Hulland took leadership."
     },
     {
       "date": "December 2025",
-      "title": "A change in leadership",
+      "title": "A Change In Leadership",
       "text": "Mrs Hulland took left."
     },
     {
       "date": "December 2025",
-      "title": "New leadership",
+      "title": "New Leadership",
       "text": "Mrs Delaney (AKA Dale) took leadership."
     },
     {
