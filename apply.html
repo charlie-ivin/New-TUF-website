@@ -72,11 +72,11 @@
       });
 
       const quotesEl = document.getElementById('quotes');
-      data.quotes.forEach(quote => {
+      data.quotes.forEach(item => {
         quotesEl.innerHTML += `
           <div class="quote">
-            "${quote}"
-            <span class="who">— Team Member</span>
+            "${item.quote}"
+            <span class="who">— ${item.name}</span>
           </div>`;
       });
     });
