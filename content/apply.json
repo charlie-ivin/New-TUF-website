@@ -1,32 +1,16 @@
 {
   "hero_heading": "Help us cook, bake, and hand out the Thumbs Up Friday's under the Canopy.",
-  "intro": "IMPORTANT: Applications Close End Of September 2026 For Joining In School Year 2026 / 2027 | The Thumbs Up Friday team runs the whole scheme! baking, serving, and keeping the cards moving every week. It's real hands-on experience, it counts toward volunteering hours, and it's a genuinely great group of people to be part of.",
+  "intro": "The Thumbs Up Friday team runs the whole scheme! baking, serving, and keeping the cards moving every week. It's real hands-on experience, it counts toward volunteering hours, and it's a genuinely great group of people to be part of.",
   "why_cards": [
-    {
-      "icon": "🎖️",
-      "title": "Duke of Edinburgh",
-      "text": "Regular weekly volunteering that counts straight toward your DofE Volunteering section — logged and signed off."
-    },
-    {
-      "icon": "🤝",
-      "title": "Real volunteering hours",
-      "text": "Build up a genuine, ongoing record of volunteering for your CV, college applications, or personal statement."
-    },
-    {
-      "icon": "🧑‍🍳",
-      "title": "Kitchen & baking skills",
-      "text": "Learn to bake properly, work safely in a kitchen, and cook for a crowd — skills that actually transfer."
-    },
-    {
-      "icon": "🌟",
-      "title": "Leadership experience",
-      "text": "Take on responsibility for a weekly event — organising, serving, and representing the scheme to the whole school."
-    }
+    { "icon": "🎖️", "title": "Duke of Edinburgh", "text": "Regular weekly volunteering that counts straight toward your DofE Volunteering section — logged and signed off." },
+    { "icon": "🤝", "title": "Real volunteering hours", "text": "Build up a genuine, ongoing record of volunteering for your CV, college applications, or personal statement." },
+    { "icon": "🧑‍🍳", "title": "Kitchen & baking skills", "text": "Learn to bake properly, work safely in a kitchen, and cook for a crowd — skills that actually transfer." },
+    { "icon": "🌟", "title": "Leadership experience", "text": "Take on responsibility for a weekly event — organising, serving, and representing the scheme to the whole school." }
   ],
   "quotes": [
-    "Thumbs Up Friday is honestly the highlight of my week — you get to see how happy people are when they get their reward.",
-    "I joined for the DofE hours and stayed because the team's just really good fun to be around.",
-    "It's proper responsibility — we run the whole thing ourselves, start to finish."
+    { "quote": "Thumbs Up Friday is honestly the highlight of my week — you get to see how happy people are when they get their reward.", "name": "Team Member" },
+    { "quote": "I joined for the DofE hours and stayed because the team's just really good fun to be around.", "name": "Team Member" },
+    { "quote": "It's proper responsibility — we run the whole thing ourselves, start to finish.", "name": "Team Member" }
   ],
   "apply_note": "Responses to your application are sent during term time only — not over holidays or bank holidays, so please bear with us if you apply close to the end of term.",
   "apply_email": "thumbs-up-friday@charlieivin.co.uk"
