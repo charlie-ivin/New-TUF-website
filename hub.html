@@ -140,6 +140,23 @@
     border-color:var(--mustard);
   }
 
+  /* OVEN (inside Happening now) */
+  .oven-list{display:flex;flex-direction:column;gap:6px;}
+  .oven-list:not(:empty){margin-bottom:8px;}
+  .oven-row{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.4rem,3vw,2.6rem);
+    line-height:1.15;
+    color:var(--choc);
+    overflow-wrap:anywhere;
+  }
+  .oven-row .oven-time{
+    color:var(--oven);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+
   /* FOOD */
   .food-panel{grid-column:1 / -1;}
   .food-head{
@@ -324,6 +341,7 @@
 
   <section class="panel now-panel" id="now-panel">
     <div class="h-label">Happening now</div>
+    <div class="oven-list" id="oven-list"></div>
     <div class="h-title" id="now-title">—</div>
     <div class="h-meta" id="now-meta"></div>
   </section>
@@ -445,6 +463,35 @@
     return todayStr(d);
   }
 
+  // ---------- oven timers (shown in "Happening now") ----------
+  var lastOvenCount = -1;
+
+  function elapsedText(secs) {
+    var h = Math.floor(secs / 3600);
+    var m = Math.floor((secs % 3600) / 60);
+    var s = secs % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+
+  // Foods that are in the oven (not yet ready, not skipped), with seconds elapsed
+  function ovenItems() {
+    var items = weekItems();
+    var out = [];
+    FOODS.forEach(function (f) {
+      var it = items[f.id];
+      if (!it || !it.oven || it.ready || it.skip) return;
+      var secs;
+      if (it.ovenTs) {
+        secs = Math.floor((Date.now() - it.ovenTs) / 1000);
+      } else {
+        var d = new Date();
+        secs = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds() - (toSec(it.oven) || 0);
+      }
+      out.push({ name: f.name, secs: Math.max(0, secs) });
+    });
+    return out;
+  }
+
   // ---------- events ----------
   // An event is "on" from its start until its end time. If no end time is
   // given it runs until the next event starts; the last event with no end
@@ -501,13 +548,33 @@
 
     // Happening now
     var nowPanel = $('now-panel');
+    var ovens = ovenItems();
+    var ovenEl = $('oven-list');
+    ovenEl.textContent = '';
+    ovens.forEach(function (o) {
+      var row = document.createElement('div');
+      row.className = 'oven-row';
+      row.appendChild(document.createTextNode('🔥 ' + o.name + ' in oven for '));
+      var tm = document.createElement('span');
+      tm.className = 'oven-time';
+      tm.textContent = elapsedText(o.secs);
+      row.appendChild(tm);
+      ovenEl.appendChild(row);
+    });
+    if (ovens.length !== lastOvenCount) { lastOvenCount = ovens.length; scheduleFit(); }
+
+    var titleEl = $('now-title');
+    nowPanel.classList.toggle('live', !!(cur || ovens.length));
     if (cur) {
-      nowPanel.classList.add('live');
-      $('now-title').textContent = cur.title;
+      titleEl.style.display = '';
+      titleEl.textContent = cur.title;
       $('now-meta').textContent = 'Until ' + fmt(cur.end);
+    } else if (ovens.length) {
+      titleEl.style.display = 'none';
+      $('now-meta').textContent = '';
     } else {
-      nowPanel.classList.remove('live');
-      $('now-title').textContent = 'Nothing right now';
+      titleEl.style.display = '';
+      titleEl.textContent = 'Nothing right now';
       $('now-meta').textContent = '';
     }
 
@@ -682,8 +749,13 @@
         b.appendChild(t);
         b.addEventListener('click', function () {
           var cur = itemFor(f.id);
-          if (cur[st.id]) delete cur[st.id];      // tap again to undo
-          else cur[st.id] = nowHM();
+          if (cur[st.id]) {                        // tap again to undo
+            delete cur[st.id];
+            if (st.id === 'oven') delete cur.ovenTs;
+          } else {
+            cur[st.id] = nowHM();
+            if (st.id === 'oven') cur.ovenTs = Date.now();
+          }
           saveFood();
           renderFood();
         });
