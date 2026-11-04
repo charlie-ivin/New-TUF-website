@@ -111,6 +111,7 @@
     margin-bottom:4px;
   }
   .reg-status{
+    min-height:1.3em;   /* keeps the box the same size when empty */
     font-size:clamp(1rem,1.7vw,1.5rem);
     color:#8a7a6a;
   }
@@ -514,10 +515,10 @@
       </div>
       <div class="reg-text">
         <h2>Register</h2>
-        <div class="reg-status" id="reg-status">Completed?</div>
+        <div class="reg-status" id="reg-status"></div>
       </div>
     </div>
-    <a class="btn btn-primary big-btn" id="reg-btn" href="#">Take Register</a>
+    <a class="btn btn-primary big-btn" id="reg-btn" href="#">Completed?</a>
     <button class="reset" id="reg-reset" type="button" hidden>Reset tick</button>
   </section>
 
@@ -871,8 +872,8 @@
       $('reg-reset').hidden = false;
     } else {
       panel.classList.remove('done');
-      $('reg-status').textContent = 'Completed?';
-      regBtn.textContent = 'Take Register';
+      $('reg-status').textContent = '';
+      regBtn.textContent = 'Completed?';
       regBtn.href = '#';
       regBtn.style.pointerEvents = '';
       $('reg-reset').hidden = true;
@@ -1395,6 +1396,13 @@
     document.addEventListener('fullscreenchange', updateFs);
     document.addEventListener('webkitfullscreenchange', updateFs);
   }
+
+  // While the red screen is showing, keep trying to go back into full screen every
+  // 2 seconds. Browsers often refuse this unless it follows a click or key press,
+  // so a click or key press on the red screen is the part that always works.
+  setInterval(function () {
+    if (wantFs && !isFs() && !printing) requestFs();
+  }, 2000);
 
   function tick() {
     var d = new Date();
