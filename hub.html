@@ -746,11 +746,12 @@
     saveReg(reg);
     renderReg();
   });
-  $('reg-reset').addEventListener('click', function () {
+  function doResetReg() {
     reg = null;
     saveReg(null);
     renderReg();
-  });
+  }
+  $('reg-reset').addEventListener('click', function () { openPin('reset-reg'); });
 
   // ---------- food tracker ----------
   // Stored as { weeks: { 'YYYY-MM-DD (Monday)': { foodId: { skip, started, oven, ready } } } }
@@ -884,13 +885,14 @@
     scheduleFit();
   }
 
-  $('food-reset').addEventListener('click', function () {
+  function doResetFood() {
     if (!confirm('Clear all food ticks and "not this week" marks for this week?')) return;
     delete foodData.weeks[currentWeek];
     delCookie(FOOD_KEY + '-' + currentWeek);
     saveFood();
     renderFood();
-  });
+  }
+  $('food-reset').addEventListener('click', function () { openPin('reset-food'); });
 
   // ---------- weekly report (print / save as PDF) ----------
   function el(tag, text, cls) {
@@ -1035,7 +1037,8 @@
   function openPin(action) {
     pinAction = action || 'exit';
     pinBox.querySelector('.pin-title').textContent =
-      pinAction === 'print' ? 'Type the code to print' : 'Type the code to exit';
+      pinAction === 'print' ? 'Type the code to print' :
+      pinAction === 'exit' ? 'Type the code to exit' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
     pinOverlay.hidden = false;
@@ -1050,6 +1053,8 @@
         var action = pinAction;
         closePin();
         if (action === 'print') doPrint();
+        else if (action === 'reset-reg') doResetReg();
+        else if (action === 'reset-food') doResetFood();
         else exitFs();
       } else {
         pinBox.classList.add('bad');
