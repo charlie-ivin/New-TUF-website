@@ -141,12 +141,22 @@
   }
 
   /* OVEN (inside Happening now) */
-  .oven-list{display:flex;flex-direction:column;gap:6px;}
+  /* Fixed-size so oven rows appearing never change the page layout */
+  .now-panel{
+    grid-column:1 / -1;
+    height:clamp(170px,26vh,300px);
+    overflow:auto;
+  }
+  .oven-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));
+    gap:6px 24px;
+  }
   .oven-list:not(:empty){margin-bottom:8px;}
   .oven-row{
     font-family:'Fredoka',sans-serif;
     font-weight:700;
-    font-size:clamp(1.4rem,3vw,2.6rem);
+    font-size:clamp(1.2rem,2.3vw,2.1rem);
     line-height:1.15;
     color:var(--choc);
     overflow-wrap:anywhere;
@@ -156,6 +166,26 @@
     font-variant-numeric:tabular-nums;
     white-space:nowrap;
   }
+
+  /* FULL SCREEN BUTTON */
+  .fs-btn{
+    position:fixed;
+    right:12px;
+    bottom:12px;
+    z-index:50;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:.95rem;
+    padding:8px 16px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.6);
+    background:rgba(62,39,35,.78);
+    color:#fff;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease;
+  }
+  .fs-btn:hover, .fs-btn:focus-visible{opacity:1;}
 
   /* FOOD */
   .food-panel{grid-column:1 / -1;}
@@ -287,7 +317,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, .fs-btn{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -346,12 +376,6 @@
     <div class="h-meta" id="now-meta"></div>
   </section>
 
-  <section class="panel next-panel">
-    <div class="h-label">Up next</div>
-    <div class="h-title" id="next-title">—</div>
-    <div class="h-meta" id="next-meta"></div>
-  </section>
-
   <section class="panel food-panel">
     <div class="food-head">
       <div class="h-label">Food</div>
@@ -369,6 +393,8 @@
   </section>
 
 </main>
+
+<button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
 
 <div id="print-report"></div>
 
@@ -561,7 +587,6 @@
       row.appendChild(tm);
       ovenEl.appendChild(row);
     });
-    if (ovens.length !== lastOvenCount) { lastOvenCount = ovens.length; scheduleFit(); }
 
     var titleEl = $('now-title');
     nowPanel.classList.toggle('live', !!(cur || ovens.length));
@@ -576,15 +601,6 @@
       titleEl.style.display = '';
       titleEl.textContent = 'Nothing right now';
       $('now-meta').textContent = '';
-    }
-
-    // Up next
-    if (nxt) {
-      $('next-title').textContent = nxt.title;
-      $('next-meta').textContent = 'At ' + fmt(nxt.start) + ' · ' + untilText(nxt.start - nowSec);
-    } else {
-      $('next-title').textContent = events.length ? "That's everything for today" : 'No events added yet';
-      $('next-meta').textContent = '';
     }
 
     // Schedule highlights
@@ -844,9 +860,6 @@
     });
     table.appendChild(tbody);
     box.appendChild(table);
-
-    box.appendChild(el('div',
-      'Printed ' + new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' }), 'foot'));
   }
 
   $('print-btn').addEventListener('click', function () {
@@ -893,6 +906,33 @@
   // ---------- clock ----------
   var currentDay = todayStr();
   var fitTicks = 0;
+
+  // ---------- full screen toggle (button doubles as the way back out) ----------
+  var fsBtn = $('fs-btn');
+  var fsRoot = document.documentElement;
+  var fsSupported = !!(fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen);
+  function isFs() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+  function updateFs() {
+    fsBtn.textContent = isFs() ? '✕ Exit full screen' : '⛶ Full screen';
+    scheduleFit();
+  }
+  if (!fsSupported) {
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener('click', function () {
+      try {
+        if (isFs()) {
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+          (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
+        }
+      } catch (e) {}
+    });
+    document.addEventListener('fullscreenchange', updateFs);
+    document.addEventListener('webkitfullscreenchange', updateFs);
+  }
 
   function tick() {
     var d = new Date();
