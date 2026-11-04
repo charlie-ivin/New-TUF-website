@@ -25,7 +25,7 @@
     flex:none;
     width:100%;
     max-width:none;
-    margin:0 auto;
+    margin:0;   /* no auto margins: they pushed the scaled page off-centre */
     transform-origin:0 0;
     padding:clamp(14px,2vw,28px);
     display:grid;
@@ -130,14 +130,14 @@
   .h-title{
     font-family:'Fredoka',sans-serif;
     font-weight:700;
-    font-size:clamp(1.6rem,3.4vw,3rem);
+    font-size:calc(var(--oven-fs,1) * clamp(1.6rem,3.4vw,3rem));
     line-height:1.1;
     margin-bottom:8px;
     overflow-wrap:anywhere;
   }
   .h-meta{
     color:#5a4038;
-    font-size:clamp(1rem,1.7vw,1.5rem);
+    font-size:calc(var(--oven-fs,1) * clamp(1rem,1.7vw,1.5rem));
   }
   .now-panel.live{
     background:#FFF3DC;
@@ -643,18 +643,23 @@
   // ---------- oven timers (shown in "Happening now") ----------
   var lastOvenKey = '';
 
-  // Shrink the oven lines (and let them flow into more columns) until all of
-  // them fit inside the Happening now panel with no scrolling.
+  // Size everything in the Happening now panel (oven lines, title, "until")
+  // to fill the panel as fully as possible: it grows when there is room and
+  // shrinks (flowing into more columns) as more foods go in the oven.
   function fitOven() {
     var panel = $('now-panel');
-    var s = 1;
-    panel.style.setProperty('--oven-fs', '1');
-    var n = 0;
-    while (panel.scrollHeight > panel.clientHeight + 1 && s > 0.4 && n < 20) {
-      s *= 0.93;
-      panel.style.setProperty('--oven-fs', s.toFixed(3));
-      n++;
+    var hasOven = $('oven-list').children.length > 0;
+    var lo = 0.3, hi = hasOven ? 3.5 : 1.6;
+    function fits(v) {
+      panel.style.setProperty('--oven-fs', v.toFixed(3));
+      return panel.scrollHeight <= panel.clientHeight + 1;
     }
+    if (fits(hi)) return;                 // already fills the panel at the biggest size
+    for (var i = 0; i < 14; i++) {
+      var mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid; else hi = mid;
+    }
+    fits(lo);
   }
 
   function elapsedText(secs) {
@@ -1086,7 +1091,7 @@
     var avail = window.innerHeight - (nav ? nav.offsetHeight : 0) - 2;
 
     // Does the content fit at scale s? (Widening the box by 1/s keeps it
-    // filling the screen width once it has been scaled down.)
+    // filling the screen width once it has been scaled.)
     function fits(s) {
       main.style.width = (100 / s) + '%';
       main.style.maxWidth = 'none';
