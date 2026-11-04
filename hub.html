@@ -1030,6 +1030,10 @@
     pinKeys.appendChild(b);
   });
   document.addEventListener('keydown', function (e) {
+    // With Chrome's keyboard lock active, a tap of Esc reaches the page
+    // (instead of leaving full screen), so use it to ask for the code.
+    if (e.key === 'Escape' && isFs() && pinOverlay.hidden && !e.repeat) { openPin(); return; }
+    if (e.key === 'Escape' && !pinOverlay.hidden && !e.repeat) { closePin(); return; }
     if (pinOverlay.hidden) return;
     if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
     else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
