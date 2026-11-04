@@ -13,7 +13,7 @@
   :root{ --go:#2E9E5B; --oven:#E07B22; }
 
   html{height:100%;}
-  body.hub{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+  body.hub{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;-webkit-touch-callout:none;}
   .nav-date{
     color:var(--cream);
     font-family:'Fredoka',sans-serif;
@@ -1415,6 +1415,12 @@
       if (isFs()) openPin('print');
       else doPrint();
     }
+  }, true);
+
+  // Block right-click / context menu everywhere on the page
+  document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
   }, true);
 
   // Ctrl/Cmd+W closes the tab. Browsers treat this as a reserved shortcut, so
