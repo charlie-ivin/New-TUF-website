@@ -448,7 +448,7 @@
 <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
 
 <div class="pin-overlay" id="pin-overlay" hidden>
-  <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code to exit full screen">
+  <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code">
     <div class="pin-title">Type the code to exit</div>
     <div class="pin-dots" id="pin-dots"></div>
     <div class="pin-keys" id="pin-keys"></div>
@@ -850,16 +850,21 @@
         b.appendChild(l);
         b.appendChild(t);
         b.addEventListener('click', function () {
-          var cur = itemFor(f.id);
-          if (cur[st.id]) {                        // tap again to undo
-            delete cur[st.id];
-            if (st.id === 'oven') delete cur.ovenTs;
-          } else {
-            cur[st.id] = nowHM();
-            if (st.id === 'oven') cur.ovenTs = Date.now();
+          function toggle() {
+            var cur = itemFor(f.id);
+            if (cur[st.id]) {                      // un-tick
+              delete cur[st.id];
+              if (st.id === 'oven') delete cur.ovenTs;
+            } else {                               // tick
+              cur[st.id] = nowHM();
+              if (st.id === 'oven') cur.ovenTs = Date.now();
+            }
+            saveFood();
+            renderFood();
           }
-          saveFood();
-          renderFood();
+          // Ticking is free; un-ticking needs the code.
+          if (itemFor(f.id)[st.id]) openPin('do', toggle);
+          else toggle();
         });
         steps.appendChild(b);
       });
@@ -869,11 +874,14 @@
       skip.className = 'skip-btn';
       skip.textContent = it.skip ? 'Make this week after all' : 'Not making this week';
       skip.addEventListener('click', function () {
-        var cur = itemFor(f.id);
-        cur.skip = !cur.skip;
-        if (!cur.skip) delete cur.skip;
-        saveFood();
-        renderFood();
+        // Both "Not making this week" and "Make this week after all" need the code.
+        openPin('do', function () {
+          var cur = itemFor(f.id);
+          cur.skip = !cur.skip;
+          if (!cur.skip) delete cur.skip;
+          saveFood();
+          renderFood();
+        });
       });
 
       card.appendChild(name);
@@ -1034,25 +1042,29 @@
     }
   }
   var pinAction = 'exit';
-  function openPin(action) {
+  var pinFn = null;
+  function openPin(action, fn) {
     pinAction = action || 'exit';
+    pinFn = fn || null;
     pinBox.querySelector('.pin-title').textContent =
       pinAction === 'print' ? 'Type the code to print' :
-      pinAction === 'exit' ? 'Type the code to exit' : 'Type the code to reset';
+      pinAction === 'exit' ? 'Type the code to exit' :
+      pinAction === 'do' ? 'Type the code to change this' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
     pinOverlay.hidden = false;
   }
-  function closePin() { pinOverlay.hidden = true; pinEntry = ''; pinBox.classList.remove('bad'); }
+  function closePin() { pinOverlay.hidden = true; pinEntry = ''; pinFn = null; pinBox.classList.remove('bad'); }
   function pinDigit(d) {
     if (pinEntry.length >= EXIT_PIN.length) return;
     pinEntry += d;
     renderPin();
     if (pinEntry.length === EXIT_PIN.length) {
       if (pinEntry === EXIT_PIN) {
-        var action = pinAction;
+        var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
+        else if (action === 'do') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1078,6 +1090,18 @@
     if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
     else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
   });
+
+  // Ctrl/Cmd+P opens the browser print dialog, which drops you out of full screen.
+  // Intercept it: in full screen ask for the code first, otherwise print the report.
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!pinOverlay.hidden) return;   // keypad already open
+      if (isFs()) openPin('print');
+      else doPrint();
+    }
+  }, true);
 
   if (!fsSupported) {
     fsBtn.hidden = true;
