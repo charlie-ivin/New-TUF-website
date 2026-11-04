@@ -24,7 +24,7 @@
   .hub-main{
     flex:none;
     width:100%;
-    max-width:1500px;
+    max-width:none;
     margin:0 auto;
     transform-origin:0 0;
     padding:clamp(14px,2vw,28px);
@@ -1089,20 +1089,31 @@
     // filling the screen width once it has been scaled down.)
     function fits(s) {
       main.style.width = (100 / s) + '%';
-      main.style.maxWidth = s < 1 ? 'none' : '';
+      main.style.maxWidth = 'none';
       return main.offsetHeight * s <= avail;
     }
 
+    // Find the biggest scale (shrinking OR enlarging) at which everything still
+    // fits on screen, so the page always uses as much of the screen as possible.
     main.style.transform = '';
-    if (fits(1)) { main.style.width = ''; main.style.maxWidth = ''; return; }
-
-    var lo = 0.25, hi = 1;
-    for (var i = 0; i < 10; i++) {
-      var mid = (lo + hi) / 2;
-      if (fits(mid)) lo = mid; else hi = mid;
+    var lo = 0.25, hi = 3;
+    if (fits(hi)) {
+      lo = hi;
+    } else {
+      for (var i = 0; i < 12; i++) {
+        var mid = (lo + hi) / 2;
+        if (fits(mid)) lo = mid; else hi = mid;
+      }
     }
+    if (lo > 0.99 && lo < 1.01) lo = 1;     // about 1: no scaling needed
     fits(lo);
-    main.style.transform = 'scale(' + lo + ')';
+    if (lo === 1) { main.style.width = ''; main.style.maxWidth = ''; }
+
+    // Centre whatever space is left over (the width is already full), so the
+    // boxes sit in the middle of the screen rather than stuck to the top.
+    var y = Math.max(0, (avail - main.offsetHeight * lo) / 2);
+    main.style.transform = (lo === 1 && y < 1) ? '' :
+      'translateY(' + y.toFixed(1) + 'px) scale(' + lo + ')';
   }
   window.addEventListener('resize', scheduleFit);
   window.addEventListener('load', scheduleFit);
