@@ -187,6 +187,61 @@
   }
   .fs-btn:hover, .fs-btn:focus-visible{opacity:1;}
 
+  /* EXIT CODE KEYPAD */
+  .pin-overlay{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(62,39,35,.82);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .pin-overlay[hidden]{display:none;}
+  .pin-box{
+    background:var(--card-bg,#fff);
+    border-radius:22px;
+    padding:clamp(18px,3vh,32px) clamp(20px,3vw,36px);
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    width:min(92vw,340px);
+  }
+  .pin-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:1.4rem;
+    color:var(--choc);
+    margin-bottom:12px;
+  }
+  .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:16px;}
+  .pin-dots span{
+    width:18px;height:18px;border-radius:50%;
+    border:3px solid #d9cdb5;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .pin-dots span.on{background:var(--choc);border-color:var(--choc);}
+  .pin-box.bad{animation:pinshake .35s;}
+  .pin-box.bad .pin-dots span{border-color:#c0392b;background:#c0392b;}
+  @keyframes pinshake{
+    0%,100%{transform:translateX(0);}
+    20%,60%{transform:translateX(-10px);}
+    40%,80%{transform:translateX(10px);}
+  }
+  .pin-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .pin-keys button{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.5rem;
+    padding:14px 0;
+    border-radius:14px;
+    border:2px solid #d9cdb5;
+    background:#fff;
+    color:var(--choc);
+    cursor:pointer;
+  }
+  .pin-keys button:active{background:var(--mustard);border-color:var(--mustard);}
+  .pin-keys button.small{font-size:.95rem;color:#8a7a6a;}
+
   /* FOOD */
   .food-panel{grid-column:1 / -1;}
   .food-head{
@@ -317,7 +372,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, .fs-btn{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -395,6 +450,14 @@
 </main>
 
 <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
+
+<div class="pin-overlay" id="pin-overlay" hidden>
+  <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code to exit full screen">
+    <div class="pin-title">Enter code to exit</div>
+    <div class="pin-dots" id="pin-dots"></div>
+    <div class="pin-keys" id="pin-keys"></div>
+  </div>
+</div>
 
 <div id="print-report"></div>
 
@@ -915,18 +978,80 @@
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
   }
   function updateFs() {
-    fsBtn.textContent = isFs() ? '✕ Exit full screen' : '⛶ Full screen';
+    fsBtn.textContent = isFs() ? '🔒 Exit full screen' : '⛶ Full screen';
+    if (!isFs()) {
+      closePin();
+      try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
+    }
     scheduleFit();
   }
+  function exitFs() {
+    try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+  }
+
+  // Exit code. Change this to whatever you like (4 digits is the tidiest).
+  var EXIT_PIN = '3756';
+  var pinEntry = '';
+  var pinOverlay = $('pin-overlay');
+  var pinBox = $('pin-box');
+  var pinDots = $('pin-dots');
+  var pinKeys = $('pin-keys');
+
+  function renderPin() {
+    pinDots.textContent = '';
+    for (var i = 0; i < EXIT_PIN.length; i++) {
+      var d = document.createElement('span');
+      if (i < pinEntry.length) d.className = 'on';
+      pinDots.appendChild(d);
+    }
+  }
+  function openPin() { pinEntry = ''; renderPin(); pinOverlay.hidden = false; }
+  function closePin() { pinOverlay.hidden = true; pinEntry = ''; pinBox.classList.remove('bad'); }
+  function pinDigit(d) {
+    if (pinEntry.length >= EXIT_PIN.length) return;
+    pinEntry += d;
+    renderPin();
+    if (pinEntry.length === EXIT_PIN.length) {
+      if (pinEntry === EXIT_PIN) {
+        closePin();
+        exitFs();
+      } else {
+        pinBox.classList.add('bad');
+        setTimeout(function () { pinBox.classList.remove('bad'); pinEntry = ''; renderPin(); }, 450);
+      }
+    }
+  }
+  ['1','2','3','4','5','6','7','8','9','Cancel','0','Clear'].forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = k;
+    if (k === 'Cancel' || k === 'Clear') b.className = 'small';
+    b.addEventListener('click', function () {
+      if (k === 'Cancel') closePin();
+      else if (k === 'Clear') { pinEntry = ''; renderPin(); }
+      else pinDigit(k);
+    });
+    pinKeys.appendChild(b);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (pinOverlay.hidden) return;
+    if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
+    else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
+  });
+
   if (!fsSupported) {
     fsBtn.hidden = true;
   } else {
     fsBtn.addEventListener('click', function () {
       try {
         if (isFs()) {
-          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          openPin();                                  // code needed to leave
         } else {
-          (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
+          var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
+          // Where supported (Chrome/Edge), make Esc need a long press to exit
+          if (p && p.then) p.then(function () {
+            try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']); } catch (e) {}
+          }).catch(function () {});
         }
       } catch (e) {}
     });
