@@ -260,6 +260,26 @@
   }
   .gate[hidden]{display:none;}
 
+  /* Gentle "tap to return" cover (used after printing, not a warning) */
+  .fs-soft{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    background:rgba(62,39,35,.96);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+  }
+  .fs-soft[hidden]{display:none;}
+  .fs-soft b{font-size:clamp(2rem,6vw,4rem);}
+  .fs-soft span{font-size:clamp(1.1rem,2.4vw,1.8rem);opacity:.85;}
+
   /* EXIT CODE KEYPAD */
   .pin-overlay{
     position:fixed;
@@ -446,7 +466,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .gate{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -534,6 +554,11 @@
     <div class="pin-title">👍 Type the code to open</div>
     <div class="pin-dots" id="gate-dots"></div>
   </div>
+</div>
+
+<div class="fs-soft" id="fs-soft" hidden>
+  <b>⛶ Tap to return to full screen</b>
+  <span>Printing finished</span>
 </div>
 
 <div class="fs-return" id="fs-return" hidden>
@@ -1068,9 +1093,25 @@
     box.appendChild(table);
   }
 
+  // Printing makes the browser leave full screen. That is expected, so it must
+  // not trigger the red "you should not have exited" warning.
+  var printing = false;
+  function afterPrint() {
+    if (!printing) return;
+    printing = false;
+    if (wantFs && !isFs()) {
+      try { enterFs(); } catch (e) {}          // works if the browser still allows it
+      setTimeout(function () {
+        if (wantFs && !isFs()) $('fs-soft').hidden = false;   // otherwise one tap puts it back
+      }, 500);
+    }
+  }
+  window.addEventListener('afterprint', afterPrint);
   function doPrint() {
     buildReport();
+    printing = true;
     window.print(); // choose "Save as PDF" as the destination
+    setTimeout(afterPrint, 300);
   }
   $('print-btn').addEventListener('click', function () {
     if (isFs()) openPin('print');   // in full screen, the code is needed first
@@ -1139,7 +1180,8 @@
   function updateFs() {
     fsBtn.textContent = isFs() ? '🔒 Exit full screen' : '⛶ Full screen';
     // Left full screen without the code (e.g. the browser's X)? Cover the page.
-    $('fs-return').hidden = isFs() || !wantFs;
+    if (isFs()) $('fs-soft').hidden = true;
+    if (!printing) $('fs-return').hidden = isFs() || !wantFs;
     if (!isFs()) {
       closePin();
       try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
@@ -1149,6 +1191,7 @@
   function exitFs() {
     wantFs = false;   // exit authorised with the code
     $('fs-return').hidden = true;
+    $('fs-soft').hidden = true;
     try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
   }
 
@@ -1299,6 +1342,8 @@
 
   function enterFs() {
     wantFs = true;
+    $('fs-soft').hidden = true;
+    $('fs-return').hidden = true;
     try {
       var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
       // Where supported (Chrome/Edge), lock keys so they reach the page
@@ -1307,7 +1352,8 @@
       }).catch(function () {});
     } catch (e) {}
   }
-  $('fs-return').addEventListener('click', enterFs);   // a tap is the gesture the browser needs
+  $('fs-return').addEventListener('click', enterFs);
+  $('fs-soft').addEventListener('click', enterFs);   // a tap is the gesture the browser needs
 
   if (!fsSupported) {
     fsBtn.hidden = true;
