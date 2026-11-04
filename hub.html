@@ -724,18 +724,23 @@
     var panel = $('register-panel');
     if (reg) {
       panel.classList.add('done');
-      $('reg-status').textContent = 'Register opened at ' + reg.time;
-      regBtn.textContent = 'Open Register Again';
+      $('reg-status').textContent = 'Register done at ' + reg.time;
+      regBtn.textContent = 'Done ✓';
+      regBtn.removeAttribute('href');       // no longer opens the sheet
+      regBtn.style.pointerEvents = 'none';
       $('reg-reset').hidden = false;
     } else {
       panel.classList.remove('done');
       $('reg-status').textContent = 'Not taken yet';
       regBtn.textContent = 'Take Register';
+      regBtn.href = registerUrl;
+      regBtn.style.pointerEvents = '';
       $('reg-reset').hidden = true;
     }
   }
 
-  regBtn.addEventListener('click', function () {
+  regBtn.addEventListener('click', function (e) {
+    if (reg) { e.preventDefault(); return; }
     var d = new Date();
     reg = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
     saveReg(reg);
@@ -942,9 +947,13 @@
     box.appendChild(table);
   }
 
-  $('print-btn').addEventListener('click', function () {
+  function doPrint() {
     buildReport();
     window.print(); // choose "Save as PDF" as the destination
+  }
+  $('print-btn').addEventListener('click', function () {
+    if (isFs()) openPin('print');   // in full screen, the code is needed first
+    else doPrint();
   });
 
   // ---------- auto-fit: shrink the layout so everything stays in view ----------
@@ -1022,7 +1031,15 @@
       pinDots.appendChild(d);
     }
   }
-  function openPin() { pinEntry = ''; renderPin(); pinOverlay.hidden = false; }
+  var pinAction = 'exit';
+  function openPin(action) {
+    pinAction = action || 'exit';
+    pinBox.querySelector('.pin-title').textContent =
+      pinAction === 'print' ? 'Type the code to print' : 'Type the code to exit';
+    pinEntry = '';
+    renderPin();
+    pinOverlay.hidden = false;
+  }
   function closePin() { pinOverlay.hidden = true; pinEntry = ''; pinBox.classList.remove('bad'); }
   function pinDigit(d) {
     if (pinEntry.length >= EXIT_PIN.length) return;
@@ -1030,8 +1047,10 @@
     renderPin();
     if (pinEntry.length === EXIT_PIN.length) {
       if (pinEntry === EXIT_PIN) {
+        var action = pinAction;
         closePin();
-        exitFs();
+        if (action === 'print') doPrint();
+        else exitFs();
       } else {
         pinBox.classList.add('bad');
         setTimeout(function () { pinBox.classList.remove('bad'); pinEntry = ''; renderPin(); }, 450);
@@ -1105,7 +1124,7 @@
       .then(function (data) {
         if (data.register_url) {
           registerUrl = data.register_url;
-          regBtn.href = registerUrl;
+          if (!reg) regBtn.href = registerUrl;
         }
         events = prepareEvents(data.events);
         buildSchedule();
