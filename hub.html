@@ -29,7 +29,7 @@
     transform-origin:0 0;
     padding:clamp(14px,2vw,28px);
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:repeat(12,1fr);
     gap:clamp(14px,2vw,26px);
     align-content:start;
   }
@@ -48,6 +48,46 @@
     text-transform:uppercase;
     color:var(--sage);
     margin-bottom:8px;
+  }
+
+  .clock-panel{grid-column:span 5;}
+  .tufs-panel{grid-column:span 3;}
+  .register-panel{grid-column:span 4;}
+
+  /* TUFs NEEDED */
+  .tufs-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:6px;
+  }
+  .tufs-panel .h-label{margin-bottom:0;}
+  .tufs-input{
+    width:100%;
+    max-width:6ch;
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(3rem,7vw,6rem);
+    line-height:1.1;
+    text-align:center;
+    color:var(--choc);
+    background:transparent;
+    border:3px solid transparent;
+    border-radius:16px;
+    padding:2px 6px;
+    -moz-appearance:textfield;
+    appearance:textfield;
+    cursor:pointer;
+  }
+  .tufs-input::-webkit-outer-spin-button,
+  .tufs-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .tufs-input.editing{
+    background:#fff;
+    border-color:var(--mustard);
+    outline:none;
+    cursor:text;
   }
 
   /* CLOCK */
@@ -463,6 +503,7 @@
 
   @media (max-width:800px){
     .hub-main{grid-template-columns:1fr;}
+    .clock-panel,.tufs-panel,.register-panel{grid-column:auto;}
     .reg-row{flex-direction:column;text-align:center;}
     .reg-text{text-align:center;}
   }
@@ -506,6 +547,12 @@
   <section class="panel clock-panel" id="clock-panel">
     <div class="clock" id="clock">--:--</div>
     <button class="reset clock-toggle" id="clock-toggle" type="button">Hide time</button>
+  </section>
+
+  <section class="panel tufs-panel" id="tufs-panel">
+    <div class="h-label">TUFs Needed</div>
+    <input class="tufs-input" id="tufs-input" type="number" inputmode="numeric" min="0" step="1" placeholder="–" readonly aria-label="TUFs needed">
+    <button class="reset" id="tufs-edit" type="button">Edit</button>
   </section>
 
   <section class="panel register-panel" id="register-panel">
@@ -1035,8 +1082,46 @@
       card.appendChild(skip);
       grid.appendChild(card);
     });
+    renderTufs();
     scheduleFit();
   }
+
+  // ---------- TUFs needed (number box; changing it needs the code) ----------
+  var tufsInput = $('tufs-input');
+  function renderTufs() {
+    var v = weekItems()._tufs;
+    tufsInput.value = (v === undefined) ? '' : v;
+  }
+  function startTufsEdit() {
+    if (!tufsInput.readOnly) return;
+    openPin('do', function () {
+      // wait a moment so the last code digit isn't typed into the box
+      setTimeout(function () {
+        tufsInput.readOnly = false;
+        tufsInput.classList.add('editing');
+        tufsInput.focus();
+        tufsInput.select();
+      }, 80);
+    });
+  }
+  function endTufsEdit() {
+    if (tufsInput.readOnly) return;
+    tufsInput.readOnly = true;
+    tufsInput.classList.remove('editing');
+    var v = tufsInput.value.trim();
+    var items = weekItems();
+    if (v === '') delete items._tufs;
+    else items._tufs = String(Math.max(0, Math.floor(+v) || 0));
+    saveFood();
+    renderTufs();
+    scheduleFit();
+  }
+  tufsInput.addEventListener('click', startTufsEdit);
+  $('tufs-edit').addEventListener('click', startTufsEdit);
+  tufsInput.addEventListener('blur', endTufsEdit);
+  tufsInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); tufsInput.blur(); }
+  });
 
   function doResetFood() {
     delete foodData.weeks[currentWeek];
@@ -1066,10 +1151,13 @@
     box.appendChild(el('div',
       'Friday ' + fri.toLocaleDateString('en-GB', opts), 'sub'));
 
+    var tv = weekItems()._tufs;
+    box.appendChild(el('div', 'TUFs needed: ' + (tv === undefined ? '—' : tv), 'sub'));
+
     var table = document.createElement('table');
     var thead = document.createElement('thead');
     var hr = document.createElement('tr');
-    ['Food', 'Status', 'Started', 'In oven', 'Ready for serving'].forEach(function (h) {
+    ['Food', 'Status', 'Started', 'In oven'].forEach(function (h) {
       hr.appendChild(el('th', h));
     });
     thead.appendChild(hr);
@@ -1086,13 +1174,11 @@
         tr.appendChild(el('td', 'Not made this week'));
         tr.appendChild(el('td', '—'));
         tr.appendChild(el('td', '—'));
-        tr.appendChild(el('td', '—'));
       } else {
         tr.appendChild(el('td',
           s === 'ready' ? 'Ready' : s === 'oven' ? 'In oven' : s === 'started' ? 'Started' : 'Not started'));
         tr.appendChild(el('td', it.started || '—'));
         tr.appendChild(el('td', it.oven || '—'));
-        tr.appendChild(el('td', it.ready || '—'));
       }
       tbody.appendChild(tr);
     });
@@ -1366,14 +1452,12 @@
   }
   function enterFs() {
     wantFs = true;
-    $('fs-soft').hidden = true;
-    $('fs-return').hidden = true;
-    requestFs();
+    requestFs();   // the covers go away by themselves once full screen is really back
   }
   $('fs-return').addEventListener('click', enterFs);
   // On the red screen, ANY click, tap or key press puts it back in full screen
   // (the browser only allows full screen straight after a click or key press).
-  ['pointerdown', 'keydown'].forEach(function (ev) {
+  ['pointerdown', 'pointerup', 'click', 'touchend', 'keydown'].forEach(function (ev) {
     document.addEventListener(ev, function (e) {
       if (ev === 'keydown' && e.key === 'Escape') return;
       if (!$('fs-return').hidden || !$('fs-soft').hidden) enterFs();
