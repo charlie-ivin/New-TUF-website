@@ -12,7 +12,8 @@
 <style>
   :root{ --go:#2E9E5B; --oven:#E07B22; }
 
-  body.hub{min-height:100vh;display:flex;flex-direction:column;}
+  html{height:100%;}
+  body.hub{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
   .nav-date{
     color:var(--cream);
     font-family:'Fredoka',sans-serif;
@@ -21,10 +22,11 @@
   }
 
   .hub-main{
-    flex:1;
+    flex:none;
     width:100%;
     max-width:1500px;
     margin:0 auto;
+    transform-origin:0 0;
     padding:clamp(14px,2vw,28px);
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -269,7 +271,7 @@
   @media print{
     @page{margin:16mm;}
     body.hub > nav, body.hub > .hub-main{display:none !important;}
-    body.hub{display:block;min-height:0;background:#fff !important;}
+    body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
       font-family:'Inter',Arial,sans-serif;
@@ -375,6 +377,37 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var pad = function (n) { return String(n).padStart(2, '0'); };
+
+  // ---------- cookies (with localStorage as a backup) ----------
+  function setCookie(name, value, days) {
+    try {
+      document.cookie = name + '=' + encodeURIComponent(value) +
+        '; max-age=' + Math.round(days * 86400) + '; path=/; SameSite=Lax';
+    } catch (e) {}
+  }
+  function getCookie(name) {
+    try {
+      var parts = document.cookie ? document.cookie.split('; ') : [];
+      for (var i = 0; i < parts.length; i++) {
+        var eq = parts[i].indexOf('=');
+        if (parts[i].slice(0, eq) === name) return decodeURIComponent(parts[i].slice(eq + 1));
+      }
+    } catch (e) {}
+    return null;
+  }
+  function cookieNames(prefix) {
+    var out = [];
+    try {
+      (document.cookie ? document.cookie.split('; ') : []).forEach(function (p) {
+        var n = p.slice(0, p.indexOf('='));
+        if (n.indexOf(prefix) === 0) out.push(n);
+      });
+    } catch (e) {}
+    return out;
+  }
+  function delCookie(name) {
+    try { document.cookie = name + '=; max-age=0; path=/; SameSite=Lax'; } catch (e) {}
+  }
 
   // ---------- time helpers ----------
   function toSec(t) {
@@ -503,13 +536,19 @@
   regBtn.href = registerUrl;
 
   function loadReg() {
+    var raw = getCookie(STORAGE_KEY);
+    if (raw === null) {
+      try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    }
     try {
-      var v = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      var v = JSON.parse(raw);
       if (v && v.date === todayStr()) return v;
     } catch (e) {}
     return null;
   }
   function saveReg(v) {
+    if (v) setCookie(STORAGE_KEY, JSON.stringify(v), 2);
+    else delCookie(STORAGE_KEY);
     try {
       if (v) localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
       else localStorage.removeItem(STORAGE_KEY);
@@ -551,16 +590,31 @@
   var currentWeek = weekStart();
 
   function loadFood() {
+    var data = { weeks: {} };
+    // localStorage backup first, then cookies (one cookie per week) win
     try {
       var v = JSON.parse(localStorage.getItem(FOOD_KEY));
-      if (v && v.weeks) return v;
+      if (v && v.weeks) data = v;
     } catch (e) {}
-    return { weeks: {} };
+    cookieNames(FOOD_KEY + '-').forEach(function (n) {
+      try {
+        var items = JSON.parse(getCookie(n));
+        if (items) data.weeks[n.slice(FOOD_KEY.length + 1)] = items;
+      } catch (e) {}
+    });
+    return data;
   }
   function saveFood() {
     // keep only the latest 12 weeks
     var keys = Object.keys(foodData.weeks).sort();
-    while (keys.length > 12) delete foodData.weeks[keys.shift()];
+    while (keys.length > 12) {
+      var old = keys.shift();
+      delete foodData.weeks[old];
+      delCookie(FOOD_KEY + '-' + old);
+    }
+    if (foodData.weeks[currentWeek]) {
+      setCookie(FOOD_KEY + '-' + currentWeek, JSON.stringify(foodData.weeks[currentWeek]), 120);
+    }
     try { localStorage.setItem(FOOD_KEY, JSON.stringify(foodData)); } catch (e) {}
   }
   function weekItems() {
@@ -654,11 +708,13 @@
       card.appendChild(skip);
       grid.appendChild(card);
     });
+    scheduleFit();
   }
 
   $('food-reset').addEventListener('click', function () {
     if (!confirm('Clear all food ticks and "not this week" marks for this week?')) return;
     delete foodData.weeks[currentWeek];
+    delCookie(FOOD_KEY + '-' + currentWeek);
     saveFood();
     renderFood();
   });
@@ -726,8 +782,45 @@
     window.print(); // choose "Save as PDF" as the destination
   });
 
+  // ---------- auto-fit: shrink the layout so everything stays in view ----------
+  var fitQueued = false;
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fit(); });
+  }
+  function fit() {
+    var main = document.querySelector('.hub-main');
+    var nav = document.querySelector('body.hub > nav');
+    if (!main) return;
+    var avail = window.innerHeight - (nav ? nav.offsetHeight : 0) - 2;
+
+    // Does the content fit at scale s? (Widening the box by 1/s keeps it
+    // filling the screen width once it has been scaled down.)
+    function fits(s) {
+      main.style.width = (100 / s) + '%';
+      main.style.maxWidth = s < 1 ? 'none' : '';
+      return main.offsetHeight * s <= avail;
+    }
+
+    main.style.transform = '';
+    if (fits(1)) { main.style.width = ''; main.style.maxWidth = ''; return; }
+
+    var lo = 0.25, hi = 1;
+    for (var i = 0; i < 10; i++) {
+      var mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid; else hi = mid;
+    }
+    fits(lo);
+    main.style.transform = 'scale(' + lo + ')';
+  }
+  window.addEventListener('resize', scheduleFit);
+  window.addEventListener('load', scheduleFit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+
   // ---------- clock ----------
   var currentDay = todayStr();
+  var fitTicks = 0;
 
   function tick() {
     var d = new Date();
@@ -749,6 +842,7 @@
       }
     }
     renderEvents(nowSec);
+    if (++fitTicks % 10 === 0) scheduleFit(); // catches long event titles etc.
   }
 
   // ---------- content ----------
@@ -763,6 +857,7 @@
         events = prepareEvents(data.events);
         buildSchedule();
         tick();
+        scheduleFit();
       })
       .catch(function () { /* keep showing what we already have */ });
   }
