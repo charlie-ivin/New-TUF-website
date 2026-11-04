@@ -1096,22 +1096,28 @@
   // Printing makes the browser leave full screen. That is expected, so it must
   // not trigger the red "you should not have exited" warning.
   var printing = false;
+  var printTimer = null;
   function afterPrint() {
-    if (!printing) return;
-    printing = false;
-    if (wantFs && !isFs()) {
-      try { enterFs(); } catch (e) {}          // works if the browser still allows it
-      setTimeout(function () {
-        if (wantFs && !isFs()) $('fs-soft').hidden = false;   // otherwise one tap puts it back
-      }, 500);
-    }
+    if (!printing || printTimer) return;
+    // The browser reports "left full screen" a moment AFTER printing ends, so keep
+    // ignoring that for a short while before deciding what to show.
+    printTimer = setTimeout(function () {
+      printTimer = null;
+      printing = false;
+      if (wantFs && !isFs()) {
+        try { enterFs(); } catch (e) {}          // works if the browser still allows it
+        setTimeout(function () {
+          if (wantFs && !isFs()) $('fs-soft').hidden = false;   // otherwise one tap puts it back
+        }, 500);
+      }
+    }, 1200);
   }
   window.addEventListener('afterprint', afterPrint);
   function doPrint() {
     buildReport();
     printing = true;
     window.print(); // choose "Save as PDF" as the destination
-    setTimeout(afterPrint, 300);
+    afterPrint();
   }
   $('print-btn').addEventListener('click', function () {
     if (isFs()) openPin('print');   // in full screen, the code is needed first
