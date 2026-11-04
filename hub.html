@@ -191,6 +191,26 @@
   }
   .fs-btn:hover, .fs-btn:focus-visible{opacity:1;}
 
+  /* RETURN-TO-FULL-SCREEN COVER (shown if full screen is left without the code) */
+  .fs-return{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    background:rgba(62,39,35,.96);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+  }
+  .fs-return[hidden]{display:none;}
+  .fs-return b{font-size:clamp(2rem,6vw,4rem);}
+  .fs-return span{font-size:clamp(1.1rem,2.4vw,1.8rem);opacity:.85;}
+
   /* EXIT CODE KEYPAD */
   .pin-overlay{
     position:fixed;
@@ -458,6 +478,11 @@
     <div class="pin-dots" id="pin-dots"></div>
     <div class="pin-keys" id="pin-keys"></div>
   </div>
+</div>
+
+<div class="fs-return" id="fs-return" hidden>
+  <b>⛶ Tap to return to full screen</b>
+  <span>Full screen was closed</span>
 </div>
 
 <div id="print-report"></div>
@@ -1031,11 +1056,14 @@
   var fsBtn = $('fs-btn');
   var fsRoot = document.documentElement;
   var fsSupported = !!(fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen);
+  var wantFs = false;   // true while the screen is meant to be full screen
   function isFs() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
   }
   function updateFs() {
     fsBtn.textContent = isFs() ? '🔒 Exit full screen' : '⛶ Full screen';
+    // Left full screen without the code (e.g. the browser's X)? Cover the page.
+    $('fs-return').hidden = isFs() || !wantFs;
     if (!isFs()) {
       closePin();
       try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
@@ -1043,6 +1071,8 @@
     scheduleFit();
   }
   function exitFs() {
+    wantFs = false;   // exit authorised with the code
+    $('fs-return').hidden = true;
     try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
   }
 
@@ -1134,9 +1164,9 @@
       e.stopPropagation();
     }
   }, true);
-  // Block reload (Ctrl/Cmd+R, Ctrl+Shift+R, F5, Ctrl+F5).
+  // Block reload (Ctrl/Cmd+R, Ctrl+Shift+R, F5, Ctrl+F5) and F11.
   document.addEventListener('keydown', function (e) {
-    var isReload = ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) || e.key === 'F5';
+    var isReload = ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) || e.key === 'F5' || e.key === 'F11';
     if (isReload) {
       e.preventDefault();
       e.stopPropagation();
@@ -1148,6 +1178,18 @@
     return '';
   });
 
+  function enterFs() {
+    wantFs = true;
+    try {
+      var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
+      // Where supported (Chrome/Edge), lock keys so they reach the page
+      if (p && p.then) p.then(function () {
+        try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape', 'KeyW', 'KeyR', 'F5', 'F11']); } catch (e) {}
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  $('fs-return').addEventListener('click', enterFs);   // a tap is the gesture the browser needs
+
   if (!fsSupported) {
     fsBtn.hidden = true;
   } else {
@@ -1156,11 +1198,7 @@
         if (isFs()) {
           openPin();                                  // code needed to leave
         } else {
-          var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
-          // Where supported (Chrome/Edge), make Esc need a long press to exit
-          if (p && p.then) p.then(function () {
-            try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape', 'KeyW', 'KeyR', 'F5']); } catch (e) {}
-          }).catch(function () {});
+          enterFs();
         }
       } catch (e) {}
     });
