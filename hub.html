@@ -72,6 +72,10 @@
     margin-left:.12em;
   }
 
+  .clock{transition:filter .3s ease;}
+  .clock-panel.time-hidden .clock{filter:blur(.22em);-webkit-filter:blur(.22em);user-select:none;pointer-events:none;}
+  .clock-toggle{margin-top:14px;}
+
   /* REGISTER */
   .register-panel{
     display:flex;
@@ -407,8 +411,9 @@
 
 <main class="hub-main">
 
-  <section class="panel clock-panel">
+  <section class="panel clock-panel" id="clock-panel">
     <div class="clock" id="clock">--:--</div>
+    <button class="reset clock-toggle" id="clock-toggle" type="button">Hide time</button>
   </section>
 
   <section class="panel register-panel" id="register-panel">
@@ -693,6 +698,23 @@
     });
   }
 
+  // ---------- hide / show the big time (needs the code) ----------
+  var TIME_KEY = 'tuf-time-hidden-v1';
+  var timeHidden = false;
+  try { timeHidden = localStorage.getItem(TIME_KEY) === '1'; } catch (e) {}
+  function renderTimeToggle() {
+    $('clock-panel').classList.toggle('time-hidden', timeHidden);
+    $('clock-toggle').textContent = timeHidden ? 'Show time' : 'Hide time';
+    scheduleFit();
+  }
+  $('clock-toggle').addEventListener('click', function () {
+    openPin('do', function () {
+      timeHidden = !timeHidden;
+      try { localStorage.setItem(TIME_KEY, timeHidden ? '1' : '0'); } catch (e) {}
+      renderTimeToggle();
+    });
+  });
+
   // ---------- register tick ----------
   var registerUrl = DEFAULT_REGISTER_URL;
   var regBtn = $('reg-btn');
@@ -894,7 +916,6 @@
   }
 
   function doResetFood() {
-    if (!confirm('Clear all food ticks and "not this week" marks for this week?')) return;
     delete foodData.weeks[currentWeek];
     delCookie(FOOD_KEY + '-' + currentWeek);
     saveFood();
@@ -1103,6 +1124,30 @@
     }
   }, true);
 
+  // Ctrl/Cmd+W closes the tab. Browsers treat this as a reserved shortcut, so
+  // a page can't always stop it, but in full screen we try to swallow it (with
+  // keyboard lock above) and, as a safety net, ask the browser to confirm
+  // before the tab is closed or reloaded.
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  // Block reload (Ctrl/Cmd+R, Ctrl+Shift+R, F5, Ctrl+F5).
+  document.addEventListener('keydown', function (e) {
+    var isReload = ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) || e.key === 'F5';
+    if (isReload) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  window.addEventListener('beforeunload', function (e) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+
   if (!fsSupported) {
     fsBtn.hidden = true;
   } else {
@@ -1114,7 +1159,7 @@
           var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
           // Where supported (Chrome/Edge), make Esc need a long press to exit
           if (p && p.then) p.then(function () {
-            try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']); } catch (e) {}
+            try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape', 'KeyW', 'KeyR', 'F5']); } catch (e) {}
           }).catch(function () {});
         }
       } catch (e) {}
@@ -1165,6 +1210,7 @@
 
   buildSchedule();
   renderReg();
+  renderTimeToggle();
   renderFood();
   tick();
   setInterval(tick, 1000);
