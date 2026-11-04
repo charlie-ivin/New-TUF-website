@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>TUF Hub — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" type="image/png" href="assets/2.png">
+<style>
+  :root{ --go:#2E9E5B; }
+
+  body.hub{min-height:100vh;display:flex;flex-direction:column;}
+  .nav-date{
+    color:var(--cream);
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(1rem,1.6vw,1.4rem);
+  }
+
+  .hub-main{
+    flex:1;
+    width:100%;
+    max-width:1500px;
+    margin:0 auto;
+    padding:clamp(14px,2vw,28px);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:clamp(14px,2vw,26px);
+    align-content:start;
+  }
+  .panel{
+    background:var(--card-bg);
+    border:2px solid #f0e6d2;
+    border-radius:22px;
+    padding:clamp(18px,2.2vw,32px);
+    box-shadow:0 12px 30px rgba(62,39,35,0.08);
+  }
+  .h-label{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(.8rem,1.1vw,1rem);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--sage);
+    margin-bottom:8px;
+  }
+
+  /* CLOCK */
+  .clock-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .clock{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(4.5rem,12vw,10rem);
+    line-height:1;
+    color:var(--choc);
+    font-variant-numeric:tabular-nums;
+  }
+  .clock small{
+    font-size:.32em;
+    color:var(--mustard);
+    margin-left:.12em;
+  }
+
+  /* REGISTER */
+  .register-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:clamp(12px,1.6vw,20px);
+  }
+  .reg-row{display:flex;align-items:center;gap:clamp(14px,2vw,26px);}
+  .tick{
+    width:clamp(72px,9vw,120px);
+    height:clamp(72px,9vw,120px);
+    border-radius:50%;
+    border:6px solid #d9cdb5;
+    color:#d9cdb5;
+    display:grid;
+    place-items:center;
+    flex-shrink:0;
+    transition:background .3s ease, border-color .3s ease, color .3s ease, transform .3s ease;
+  }
+  .tick svg{width:62%;height:62%;}
+  .register-panel.done .tick{
+    background:var(--go);
+    border-color:var(--go);
+    color:#fff;
+    transform:scale(1.06);
+  }
+  .reg-text{text-align:left;}
+  .reg-text h2{
+    font-size:clamp(1.6rem,3vw,2.6rem);
+    line-height:1.1;
+    margin-bottom:4px;
+  }
+  .reg-status{
+    font-size:clamp(1rem,1.7vw,1.5rem);
+    color:#8a7a6a;
+  }
+  .register-panel.done .reg-status{color:var(--go);font-weight:700;}
+  .big-btn{font-size:clamp(1.1rem,1.9vw,1.7rem);padding:clamp(12px,1.4vw,18px) clamp(26px,3vw,44px);}
+  .reset{
+    background:none;
+    border:0;
+    color:#8a7a6a;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
+  /* NOW / NEXT */
+  .h-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.6rem,3.4vw,3rem);
+    line-height:1.1;
+    margin-bottom:8px;
+    overflow-wrap:anywhere;
+  }
+  .h-meta{
+    color:#5a4038;
+    font-size:clamp(1rem,1.7vw,1.5rem);
+  }
+  .now-panel.live{
+    background:#FFF3DC;
+    border-color:var(--mustard);
+  }
+
+  /* SCHEDULE */
+  .schedule-panel{grid-column:1 / -1;}
+  .sched{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:12px;
+  }
+  .ev{
+    display:flex;
+    gap:14px;
+    align-items:baseline;
+    padding:12px 16px;
+    border-radius:14px;
+    background:#fff;
+    border:2px solid #f0e6d2;
+    font-size:clamp(1rem,1.5vw,1.3rem);
+  }
+  .ev .t{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    color:var(--choc);
+    min-width:3.4em;
+  }
+  .ev.past{opacity:.45;}
+  .ev.now{background:var(--mustard);border-color:var(--mustard);}
+  .ev.next{border-color:var(--mustard);}
+  .empty{color:#8a7a6a;font-size:1.1rem;}
+
+  @media (max-width:800px){
+    .hub-main{grid-template-columns:1fr;}
+    .reg-row{flex-direction:column;text-align:center;}
+    .reg-text{text-align:center;}
+  }
+</style>
+</head>
+<body class="hub">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday — Hub</div>
+  <div class="nav-date" id="date"></div>
+</nav>
+
+<main class="hub-main">
+
+  <section class="panel clock-panel">
+    <div class="clock" id="clock">--:--</div>
+  </section>
+
+  <section class="panel register-panel" id="register-panel">
+    <div class="reg-row">
+      <div class="tick" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div class="reg-text">
+        <h2>Register</h2>
+        <div class="reg-status" id="reg-status">Not taken yet</div>
+      </div>
+    </div>
+    <a class="btn btn-primary big-btn" id="reg-btn" href="#" target="_blank" rel="noopener">Take Register</a>
+    <button class="reset" id="reg-reset" type="button" hidden>Reset tick</button>
+  </section>
+
+  <section class="panel now-panel" id="now-panel">
+    <div class="h-label">Happening now</div>
+    <div class="h-title" id="now-title">—</div>
+    <div class="h-meta" id="now-meta"></div>
+  </section>
+
+  <section class="panel next-panel">
+    <div class="h-label">Up next</div>
+    <div class="h-title" id="next-title">—</div>
+    <div class="h-meta" id="next-meta"></div>
+  </section>
+
+  <section class="panel schedule-panel">
+    <div class="h-label">Today's schedule</div>
+    <div class="sched" id="sched"></div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  // Used only if content/hub.json can't be loaded (e.g. the screen is offline).
+  var DEFAULT_REGISTER_URL = 'https://docs.google.com/spreadsheets/d/1R7_71nVOLdocqbKiXY1IwyIRn_LudvZw7CSWH6aljp4/edit?usp=sharing';
+  var STORAGE_KEY = 'tuf-register-v1';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+
+  // ---------- time helpers ----------
+  function toSec(t) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '').trim());
+    if (!m) return null;
+    var h = +m[1], mi = +m[2];
+    if (h > 23 || mi > 59) return null;
+    return h * 3600 + mi * 60;
+  }
+  function fmt(sec) {
+    sec = sec % 86400;
+    return pad(Math.floor(sec / 3600)) + ':' + pad(Math.floor((sec % 3600) / 60));
+  }
+  function untilText(sec) {
+    if (sec < 600) return 'in ' + Math.floor(sec / 60) + ':' + pad(sec % 60);
+    var mins = Math.ceil(sec / 60);
+    if (mins < 60) return 'in ' + mins + ' min';
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return 'in ' + h + ' h' + (m ? ' ' + m + ' min' : '');
+  }
+  function todayStr(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  // ---------- events ----------
+  // An event is "on" from its start until its end time. If no end time is
+  // given it runs until the next event starts; the last event with no end
+  // time is treated as lasting 30 minutes.
+  var events = [];
+  var rows = [];
+
+  function prepareEvents(list) {
+    var evs = (list || []).map(function (e) {
+      return { title: e.title || '', time: e.time, start: toSec(e.time), endRaw: toSec(e.end) };
+    }).filter(function (e) { return e.start !== null && e.title; })
+      .sort(function (a, b) { return a.start - b.start; });
+    evs.forEach(function (e, i) {
+      var nextStart = evs[i + 1] ? evs[i + 1].start : null;
+      if (e.endRaw !== null && e.endRaw > e.start) e.end = e.endRaw;
+      else if (nextStart !== null && nextStart > e.start) e.end = nextStart;
+      else e.end = e.start + 1800;
+    });
+    return evs;
+  }
+
+  function buildSchedule() {
+    var el = $('sched');
+    el.textContent = '';
+    rows = [];
+    if (!events.length) {
+      var p = document.createElement('div');
+      p.className = 'empty';
+      p.textContent = 'No events added yet.';
+      el.appendChild(p);
+      return;
+    }
+    events.forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'ev';
+      var t = document.createElement('span');
+      t.className = 't';
+      t.textContent = fmt(e.start);
+      var n = document.createElement('span');
+      n.textContent = e.title;
+      row.appendChild(t);
+      row.appendChild(n);
+      el.appendChild(row);
+      rows.push(row);
+    });
+  }
+
+  function renderEvents(nowSec) {
+    var cur = null, nxt = null;
+    events.forEach(function (e) { if (nowSec >= e.start && nowSec < e.end) cur = e; });
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].start > nowSec) { nxt = events[i]; break; }
+    }
+
+    // Happening now
+    var nowPanel = $('now-panel');
+    if (cur) {
+      nowPanel.classList.add('live');
+      $('now-title').textContent = cur.title;
+      $('now-meta').textContent = 'Until ' + fmt(cur.end);
+    } else {
+      nowPanel.classList.remove('live');
+      $('now-title').textContent = 'Nothing right now';
+      $('now-meta').textContent = '';
+    }
+
+    // Up next
+    if (nxt) {
+      $('next-title').textContent = nxt.title;
+      $('next-meta').textContent = 'At ' + fmt(nxt.start) + ' · ' + untilText(nxt.start - nowSec);
+    } else {
+      $('next-title').textContent = events.length ? "That's everything for today" : 'No events added yet';
+      $('next-meta').textContent = '';
+    }
+
+    // Schedule highlights
+    events.forEach(function (e, i) {
+      var cls = 'ev';
+      if (nowSec >= e.end) cls += ' past';
+      else if (nowSec >= e.start) cls += ' now';
+      else if (e === nxt) cls += ' next';
+      if (rows[i] && rows[i].className !== cls) rows[i].className = cls;
+    });
+  }
+
+  // ---------- register tick ----------
+  var registerUrl = DEFAULT_REGISTER_URL;
+  var regBtn = $('reg-btn');
+  regBtn.href = registerUrl;
+
+  function loadReg() {
+    try {
+      var v = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (v && v.date === todayStr()) return v;
+    } catch (e) {}
+    return null;
+  }
+  function saveReg(v) {
+    try {
+      if (v) localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  var reg = loadReg();
+
+  function renderReg() {
+    var panel = $('register-panel');
+    if (reg) {
+      panel.classList.add('done');
+      $('reg-status').textContent = 'Register opened at ' + reg.time;
+      regBtn.textContent = 'Open Register Again';
+      $('reg-reset').hidden = false;
+    } else {
+      panel.classList.remove('done');
+      $('reg-status').textContent = 'Not taken yet';
+      regBtn.textContent = 'Take Register';
+      $('reg-reset').hidden = true;
+    }
+  }
+
+  regBtn.addEventListener('click', function () {
+    var d = new Date();
+    reg = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+    saveReg(reg);
+    renderReg();
+  });
+  $('reg-reset').addEventListener('click', function () {
+    reg = null;
+    saveReg(null);
+    renderReg();
+  });
+
+  // ---------- clock ----------
+  var currentDay = todayStr();
+
+  function tick() {
+    var d = new Date();
+    var nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+
+    $('clock').innerHTML = pad(d.getHours()) + ':' + pad(d.getMinutes()) + '<small>:' + pad(d.getSeconds()) + '</small>';
+    $('date').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // New day: the tick resets itself automatically.
+    if (todayStr(d) !== currentDay) {
+      currentDay = todayStr(d);
+      reg = loadReg();
+      renderReg();
+    }
+    renderEvents(nowSec);
+  }
+
+  // ---------- content ----------
+  function loadContent() {
+    return fetch('content/hub.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.register_url) {
+          registerUrl = data.register_url;
+          regBtn.href = registerUrl;
+        }
+        events = prepareEvents(data.events);
+        buildSchedule();
+        tick();
+      })
+      .catch(function () { /* keep showing what we already have */ });
+  }
+
+  buildSchedule();
+  renderReg();
+  tick();
+  setInterval(tick, 1000);
+  loadContent();
+  setInterval(loadContent, 5 * 60 * 1000); // pick up CMS edits without a reload
+})();
+</script>
+
+</body>
+</html>
