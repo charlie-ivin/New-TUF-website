@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="assets/style.css">
 <link rel="icon" type="image/png" href="assets/2.png">
 <style>
-  :root{ --go:#2E9E5B; }
+  :root{ --go:#2E9E5B; --oven:#E07B22; }
 
   body.hub{min-height:100vh;display:flex;flex-direction:column;}
   .nav-date{
@@ -138,6 +138,97 @@
     border-color:var(--mustard);
   }
 
+  /* FOOD */
+  .food-panel{grid-column:1 / -1;}
+  .food-head{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .food-head .h-label{margin-bottom:0;}
+  .food-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .food-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:14px;
+  }
+  .food{
+    background:#fff;
+    border:2px solid #f0e6d2;
+    border-radius:18px;
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:border-color .3s ease, background .3s ease, opacity .3s ease;
+  }
+  .food-name{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.2rem,1.9vw,1.7rem);
+    line-height:1.1;
+    color:var(--choc);
+  }
+  .food-name small{
+    font-size:.55em;
+    font-weight:600;
+    color:var(--sage);
+    margin-left:.4em;
+  }
+  .food-status{
+    font-size:clamp(.95rem,1.3vw,1.15rem);
+    color:#8a7a6a;
+    min-height:1.4em;
+  }
+  .food.s-started{border-color:var(--mustard);}
+  .food.s-started .food-status{color:#a87a00;font-weight:700;}
+  .food.s-oven{border-color:var(--oven);background:#FFF3E6;}
+  .food.s-oven .food-status{color:var(--oven);font-weight:700;}
+  .food.s-ready{border-color:var(--go);background:#EEF9F2;}
+  .food.s-ready .food-status{color:var(--go);font-weight:700;}
+  .food.skipped{opacity:.55;background:#f6f1e6;border-style:dashed;}
+  .food.skipped .food-status{font-weight:700;color:#8a7a6a;}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .step{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(.85rem,1.1vw,1rem);
+    line-height:1.15;
+    padding:12px 6px;
+    border-radius:12px;
+    border:2px solid #d9cdb5;
+    background:#fff;
+    color:#5a4038;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    transition:background .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .step:hover:not(:disabled){border-color:var(--choc);}
+  .step .st{font-size:.8em;font-weight:500;min-height:1.1em;}
+  .step.on{color:#fff;}
+  .step[data-step="started"].on{background:var(--mustard);border-color:var(--mustard);}
+  .step[data-step="oven"].on{background:var(--oven);border-color:var(--oven);}
+  .step[data-step="ready"].on{background:var(--go);border-color:var(--go);}
+  .step:disabled{cursor:not-allowed;opacity:.6;}
+  .skip-btn{
+    align-self:flex-start;
+    background:none;
+    border:0;
+    padding:0;
+    color:#8a7a6a;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
   /* SCHEDULE */
   .schedule-panel{grid-column:1 / -1;}
   .sched{
@@ -166,10 +257,39 @@
   .ev.next{border-color:var(--mustard);}
   .empty{color:#8a7a6a;font-size:1.1rem;}
 
+  /* PRINT REPORT (hidden on screen) */
+  #print-report{display:none;}
+
   @media (max-width:800px){
     .hub-main{grid-template-columns:1fr;}
     .reg-row{flex-direction:column;text-align:center;}
     .reg-text{text-align:center;}
+  }
+
+  @media print{
+    @page{margin:16mm;}
+    body.hub > nav, body.hub > .hub-main{display:none !important;}
+    body.hub{display:block;min-height:0;background:#fff !important;}
+    #print-report{
+      display:block;
+      font-family:'Inter',Arial,sans-serif;
+      color:#000;
+    }
+    #print-report h1{
+      font-family:'Fredoka',Arial,sans-serif;
+      font-size:22pt;
+      margin:0 0 4px;
+    }
+    #print-report .sub{font-size:11pt;color:#444;margin-bottom:18px;}
+    #print-report table{width:100%;border-collapse:collapse;font-size:11pt;}
+    #print-report th, #print-report td{
+      border:1px solid #999;
+      padding:8px 10px;
+      text-align:left;
+    }
+    #print-report th{background:#eee;}
+    #print-report tr.skip td{color:#777;font-style:italic;}
+    #print-report .foot{margin-top:16px;font-size:9pt;color:#666;}
   }
 </style>
 </head>
@@ -212,6 +332,17 @@
     <div class="h-meta" id="next-meta"></div>
   </section>
 
+  <section class="panel food-panel">
+    <div class="food-head">
+      <div class="h-label">Food</div>
+      <div class="food-actions">
+        <button class="btn btn-primary" id="print-btn" type="button">Print week report (PDF)</button>
+        <button class="reset" id="food-reset" type="button">Reset this week</button>
+      </div>
+    </div>
+    <div class="food-grid" id="food-grid"></div>
+  </section>
+
   <section class="panel schedule-panel">
     <div class="h-label">Today's schedule</div>
     <div class="sched" id="sched"></div>
@@ -219,11 +350,28 @@
 
 </main>
 
+<div id="print-report"></div>
+
 <script>
 (function () {
   // Used only if content/hub.json can't be loaded (e.g. the screen is offline).
   var DEFAULT_REGISTER_URL = 'https://docs.google.com/spreadsheets/d/1R7_71nVOLdocqbKiXY1IwyIRn_LudvZw7CSWH6aljp4/edit?usp=sharing';
   var STORAGE_KEY = 'tuf-register-v1';
+  var FOOD_KEY = 'tuf-food-v1';
+
+  var FOODS = [
+    { id: 'brownies',     name: 'Brownies',      note: 'gluten free' },
+    { id: 'chelsea',      name: 'Chelsea buns' },
+    { id: 'cupcakes',     name: 'Cupcakes' },
+    { id: 'sausage',      name: 'Sausage rolls' },
+    { id: 'cheese',       name: 'Cheese twists' },
+    { id: 'cakepops',     name: 'Cake pops' }
+  ];
+  var STEPS = [
+    { id: 'started', label: 'Starting',          done: 'Started' },
+    { id: 'oven',    label: 'In oven',           done: 'In oven since' },
+    { id: 'ready',   label: 'Ready for serving', done: 'Ready for serving at' }
+  ];
 
   var $ = function (id) { return document.getElementById(id); };
   var pad = function (n) { return String(n).padStart(2, '0'); };
@@ -250,6 +398,18 @@
   function todayStr(d) {
     d = d || new Date();
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function nowHM() {
+    var d = new Date();
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  // Monday of the current week, as YYYY-MM-DD
+  function weekStart(d) {
+    d = d ? new Date(d.getTime()) : new Date();
+    d.setHours(12, 0, 0, 0);
+    var day = (d.getDay() + 6) % 7; // Mon=0 ... Sun=6
+    d.setDate(d.getDate() - day);
+    return todayStr(d);
   }
 
   // ---------- events ----------
@@ -385,6 +545,187 @@
     renderReg();
   });
 
+  // ---------- food tracker ----------
+  // Stored as { weeks: { 'YYYY-MM-DD (Monday)': { foodId: { skip, started, oven, ready } } } }
+  var foodData = loadFood();
+  var currentWeek = weekStart();
+
+  function loadFood() {
+    try {
+      var v = JSON.parse(localStorage.getItem(FOOD_KEY));
+      if (v && v.weeks) return v;
+    } catch (e) {}
+    return { weeks: {} };
+  }
+  function saveFood() {
+    // keep only the latest 12 weeks
+    var keys = Object.keys(foodData.weeks).sort();
+    while (keys.length > 12) delete foodData.weeks[keys.shift()];
+    try { localStorage.setItem(FOOD_KEY, JSON.stringify(foodData)); } catch (e) {}
+  }
+  function weekItems() {
+    if (!foodData.weeks[currentWeek]) foodData.weeks[currentWeek] = {};
+    return foodData.weeks[currentWeek];
+  }
+  function itemFor(id) {
+    var items = weekItems();
+    if (!items[id]) items[id] = {};
+    return items[id];
+  }
+  function statusOf(it) {
+    if (it.skip) return 'skipped';
+    if (it.ready) return 'ready';
+    if (it.oven) return 'oven';
+    if (it.started) return 'started';
+    return 'none';
+  }
+  function statusText(it) {
+    var s = statusOf(it);
+    if (s === 'skipped') return 'Not making this week';
+    if (s === 'ready') return 'Ready for serving at ' + it.ready;
+    if (s === 'oven') return 'In oven since ' + it.oven;
+    if (s === 'started') return 'Started at ' + it.started;
+    return 'Not started';
+  }
+
+  function renderFood() {
+    var grid = $('food-grid');
+    grid.textContent = '';
+    FOODS.forEach(function (f) {
+      var it = itemFor(f.id);
+      var s = statusOf(it);
+
+      var card = document.createElement('div');
+      card.className = 'food' + (s === 'skipped' ? ' skipped' : (s !== 'none' ? ' s-' + s : ''));
+
+      var name = document.createElement('div');
+      name.className = 'food-name';
+      name.textContent = f.name;
+      if (f.note) {
+        var sm = document.createElement('small');
+        sm.textContent = f.note;
+        name.appendChild(sm);
+      }
+
+      var status = document.createElement('div');
+      status.className = 'food-status';
+      status.textContent = statusText(it);
+
+      var steps = document.createElement('div');
+      steps.className = 'steps';
+      STEPS.forEach(function (st) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'step' + (it[st.id] ? ' on' : '');
+        b.setAttribute('data-step', st.id);
+        b.disabled = !!it.skip;
+        var l = document.createElement('span');
+        l.textContent = st.label;
+        var t = document.createElement('span');
+        t.className = 'st';
+        t.textContent = it[st.id] || '';
+        b.appendChild(l);
+        b.appendChild(t);
+        b.addEventListener('click', function () {
+          var cur = itemFor(f.id);
+          if (cur[st.id]) delete cur[st.id];      // tap again to undo
+          else cur[st.id] = nowHM();
+          saveFood();
+          renderFood();
+        });
+        steps.appendChild(b);
+      });
+
+      var skip = document.createElement('button');
+      skip.type = 'button';
+      skip.className = 'skip-btn';
+      skip.textContent = it.skip ? 'Make this week after all' : 'Not making this week';
+      skip.addEventListener('click', function () {
+        var cur = itemFor(f.id);
+        cur.skip = !cur.skip;
+        if (!cur.skip) delete cur.skip;
+        saveFood();
+        renderFood();
+      });
+
+      card.appendChild(name);
+      card.appendChild(status);
+      card.appendChild(steps);
+      card.appendChild(skip);
+      grid.appendChild(card);
+    });
+  }
+
+  $('food-reset').addEventListener('click', function () {
+    if (!confirm('Clear all food ticks and "not this week" marks for this week?')) return;
+    delete foodData.weeks[currentWeek];
+    saveFood();
+    renderFood();
+  });
+
+  // ---------- weekly report (print / save as PDF) ----------
+  function el(tag, text, cls) {
+    var e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  }
+  function buildReport() {
+    var box = $('print-report');
+    box.textContent = '';
+
+    var monday = new Date(currentWeek + 'T12:00:00');
+    var fri = new Date(monday.getTime());
+    fri.setDate(fri.getDate() + 4);
+    var opts = { day: 'numeric', month: 'long', year: 'numeric' };
+
+    box.appendChild(el('h1', '👍 Thumbs Up Friday — Food Report'));
+    box.appendChild(el('div',
+      'Week commencing ' + monday.toLocaleDateString('en-GB', opts) +
+      ' · Friday ' + fri.toLocaleDateString('en-GB', opts), 'sub'));
+
+    var table = document.createElement('table');
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    ['Food', 'Status', 'Started', 'In oven', 'Ready for serving'].forEach(function (h) {
+      hr.appendChild(el('th', h));
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    FOODS.forEach(function (f) {
+      var it = itemFor(f.id);
+      var s = statusOf(it);
+      var tr = document.createElement('tr');
+      if (s === 'skipped') tr.className = 'skip';
+      tr.appendChild(el('td', f.name + (f.note ? ' (' + f.note + ')' : '')));
+      if (s === 'skipped') {
+        tr.appendChild(el('td', 'Not made this week'));
+        tr.appendChild(el('td', '—'));
+        tr.appendChild(el('td', '—'));
+        tr.appendChild(el('td', '—'));
+      } else {
+        tr.appendChild(el('td',
+          s === 'ready' ? 'Ready' : s === 'oven' ? 'In oven' : s === 'started' ? 'Started' : 'Not started'));
+        tr.appendChild(el('td', it.started || '—'));
+        tr.appendChild(el('td', it.oven || '—'));
+        tr.appendChild(el('td', it.ready || '—'));
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    box.appendChild(table);
+
+    box.appendChild(el('div',
+      'Printed ' + new Date().toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' }), 'foot'));
+  }
+
+  $('print-btn').addEventListener('click', function () {
+    buildReport();
+    window.print(); // choose "Save as PDF" as the destination
+  });
+
   // ---------- clock ----------
   var currentDay = todayStr();
 
@@ -400,6 +741,12 @@
       currentDay = todayStr(d);
       reg = loadReg();
       renderReg();
+      // New week: food board starts fresh automatically.
+      var wk = weekStart(d);
+      if (wk !== currentWeek) {
+        currentWeek = wk;
+        renderFood();
+      }
     }
     renderEvents(nowSec);
   }
@@ -422,6 +769,7 @@
 
   buildSchedule();
   renderReg();
+  renderFood();
   tick();
   setInterval(tick, 1000);
   loadContent();
