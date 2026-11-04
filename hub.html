@@ -248,6 +248,18 @@
     font-weight:500;
   }
 
+  /* ENTRY GATE (code needed to open the page) */
+  .gate{
+    position:fixed;
+    inset:0;
+    z-index:300;
+    background:var(--cream,#fff8ea);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .gate[hidden]{display:none;}
+
   /* EXIT CODE KEYPAD */
   .pin-overlay{
     position:fixed;
@@ -434,7 +446,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .gate{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -514,6 +526,13 @@
     <div class="pin-title">Type the code to exit</div>
     <div class="pin-dots" id="pin-dots"></div>
     <div class="pin-keys" id="pin-keys"></div>
+  </div>
+</div>
+
+<div class="gate" id="gate">
+  <div class="pin-box" id="gate-box" role="dialog" aria-label="Enter code to open">
+    <div class="pin-title">👍 Type the code to open</div>
+    <div class="pin-dots" id="gate-dots"></div>
   </div>
 </div>
 
@@ -1182,6 +1201,49 @@
     if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
     else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
   });
+
+  // ---------- entry gate: code needed the first time the page is opened ----------
+  // Remembered for this browser tab only, so closing the tab and reopening asks again.
+  var GATE_KEY = 'tuf-gate-ok-v1';
+  var GATE_PIN = EXIT_PIN;          // change this line to use a different code just for entry
+  var gate = $('gate');
+  var gateBox = $('gate-box');
+  var gateDots = $('gate-dots');
+  var gateEntry = '';
+  function gateUnlocked() {
+    try { return sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) { return false; }
+  }
+  function renderGate() {
+    gateDots.textContent = '';
+    for (var i = 0; i < GATE_PIN.length; i++) {
+      var d = document.createElement('span');
+      if (i < gateEntry.length) d.className = 'on';
+      gateDots.appendChild(d);
+    }
+  }
+  function gateDigit(d) {
+    if (gateEntry.length >= GATE_PIN.length) return;
+    gateEntry += d;
+    renderGate();
+    if (gateEntry.length === GATE_PIN.length) {
+      if (gateEntry === GATE_PIN) {
+        try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
+        gate.hidden = true;
+        gateEntry = '';
+        scheduleFit();
+      } else {
+        gateBox.classList.add('bad');
+        setTimeout(function () { gateBox.classList.remove('bad'); gateEntry = ''; renderGate(); }, 450);
+      }
+    }
+  }
+  document.addEventListener('keydown', function (e) {
+    if (gate.hidden) return;
+    if (/^[0-9]$/.test(e.key)) gateDigit(e.key);
+    else if (e.key === 'Backspace') { gateEntry = gateEntry.slice(0, -1); renderGate(); }
+  });
+  gate.hidden = gateUnlocked();
+  renderGate();
 
   // Ctrl/Cmd+P opens the browser print dialog, which drops you out of full screen.
   // Intercept it: in full screen ask for the code first, otherwise print the report.
