@@ -144,19 +144,19 @@
   /* Fixed-size so oven rows appearing never change the page layout */
   .now-panel{
     grid-column:1 / -1;
-    height:clamp(170px,26vh,300px);
-    overflow:auto;
+    height:clamp(190px,30vh,340px);
+    overflow:hidden;
   }
   .oven-list{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,calc(340px * var(--oven-fs,1))),1fr));
     gap:6px 24px;
   }
   .oven-list:not(:empty){margin-bottom:8px;}
   .oven-row{
     font-family:'Fredoka',sans-serif;
     font-weight:700;
-    font-size:clamp(1.2rem,2.3vw,2.1rem);
+    font-size:calc(var(--oven-fs,1) * clamp(1.2rem,2.3vw,2.1rem));
     line-height:1.15;
     color:var(--choc);
     overflow-wrap:anywhere;
@@ -227,7 +227,8 @@
     20%,60%{transform:translateX(-10px);}
     40%,80%{transform:translateX(10px);}
   }
-  .pin-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .pin-keys{display:flex;justify-content:center;gap:10px;}
+  .pin-keys button{padding-left:28px !important;padding-right:28px !important;}
   .pin-keys button{
     font-family:'Fredoka',sans-serif;
     font-weight:600;
@@ -448,7 +449,7 @@
 
 <div class="pin-overlay" id="pin-overlay" hidden>
   <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code to exit full screen">
-    <div class="pin-title">Enter code to exit</div>
+    <div class="pin-title">Type the code to exit</div>
     <div class="pin-dots" id="pin-dots"></div>
     <div class="pin-keys" id="pin-keys"></div>
   </div>
@@ -549,7 +550,21 @@
   }
 
   // ---------- oven timers (shown in "Happening now") ----------
-  var lastOvenCount = -1;
+  var lastOvenKey = '';
+
+  // Shrink the oven lines (and let them flow into more columns) until all of
+  // them fit inside the Happening now panel with no scrolling.
+  function fitOven() {
+    var panel = $('now-panel');
+    var s = 1;
+    panel.style.setProperty('--oven-fs', '1');
+    var n = 0;
+    while (panel.scrollHeight > panel.clientHeight + 1 && s > 0.4 && n < 20) {
+      s *= 0.93;
+      panel.style.setProperty('--oven-fs', s.toFixed(3));
+      n++;
+    }
+  }
 
   function elapsedText(secs) {
     var h = Math.floor(secs / 3600);
@@ -662,6 +677,11 @@
       titleEl.textContent = 'Nothing right now';
       $('now-meta').textContent = '';
     }
+
+    // Re-fit the oven lines only when something that affects their size changes
+    var ovenKey = ovens.length + '|' + ovenEl.textContent.length + '|' +
+      window.innerWidth + 'x' + window.innerHeight + '|' + (cur ? cur.title : '');
+    if (ovenKey !== lastOvenKey) { lastOvenKey = ovenKey; fitOven(); }
 
     // Schedule highlights
     events.forEach(function (e, i) {
@@ -1018,18 +1038,13 @@
       }
     }
   }
-  ['1','2','3','4','5','6','7','8','9','Cancel','0','Clear'].forEach(function (k) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = k;
-    if (k === 'Cancel' || k === 'Clear') b.className = 'small';
-    b.addEventListener('click', function () {
-      if (k === 'Cancel') closePin();
-      else if (k === 'Clear') { pinEntry = ''; renderPin(); }
-      else pinDigit(k);
-    });
-    pinKeys.appendChild(b);
-  });
+  // No on-screen number keys: the code is typed on the keyboard.
+  var cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'small';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', closePin);
+  pinKeys.appendChild(cancelBtn);
   document.addEventListener('keydown', function (e) {
     // With Chrome's keyboard lock active, a tap of Esc reaches the page
     // (instead of leaving full screen), so use it to ask for the code.
