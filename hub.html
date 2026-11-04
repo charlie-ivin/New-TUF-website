@@ -517,7 +517,7 @@
         <div class="reg-status" id="reg-status">Completed?</div>
       </div>
     </div>
-    <a class="btn btn-primary big-btn" id="reg-btn" href="#" target="_blank" rel="noopener">Take Register</a>
+    <a class="btn btn-primary big-btn" id="reg-btn" href="#">Take Register</a>
     <button class="reset" id="reg-reset" type="button" hidden>Reset tick</button>
   </section>
 
@@ -836,7 +836,7 @@
   // ---------- register tick ----------
   var registerUrl = DEFAULT_REGISTER_URL;
   var regBtn = $('reg-btn');
-  regBtn.href = registerUrl;
+  regBtn.href = '#';
 
   function loadReg() {
     var raw = getCookie(STORAGE_KEY);
@@ -873,18 +873,22 @@
       panel.classList.remove('done');
       $('reg-status').textContent = 'Completed?';
       regBtn.textContent = 'Take Register';
-      regBtn.href = registerUrl;
+      regBtn.href = '#';
       regBtn.style.pointerEvents = '';
       $('reg-reset').hidden = true;
     }
   }
 
+  // Taking the register needs the code, so only you can do it.
   regBtn.addEventListener('click', function (e) {
-    if (reg) { e.preventDefault(); return; }
-    var d = new Date();
-    reg = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
-    saveReg(reg);
-    renderReg();
+    e.preventDefault();                    // never open the sheet until the code is right
+    if (reg) return;
+    openPin('reg', function () {
+      var d = new Date();
+      reg = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+      saveReg(reg);
+      renderReg();
+    });
   });
   function doResetReg() {
     reg = null;
@@ -1190,6 +1194,7 @@
     // Left full screen without the code (e.g. the browser's X)? Cover the page.
     if (isFs()) $('fs-soft').hidden = true;
     if (!printing) $('fs-return').hidden = isFs() || !wantFs;
+    if (!isFs() && wantFs && !printing) requestFs();   // try to go straight back in
     if (!isFs()) {
       closePin();
       try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
@@ -1227,7 +1232,8 @@
     pinBox.querySelector('.pin-title').textContent =
       pinAction === 'print' ? 'Type the code to print' :
       pinAction === 'exit' ? 'Type the code to exit' :
-      pinAction === 'do' ? 'Type the code to change this' : 'Type the code to reset';
+      pinAction === 'do' ? 'Type the code to change this' :
+      pinAction === 'reg' ? 'Type the code to take the register' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
     pinOverlay.hidden = false;
@@ -1242,7 +1248,7 @@
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1348,10 +1354,7 @@
     return '';
   });
 
-  function enterFs() {
-    wantFs = true;
-    $('fs-soft').hidden = true;
-    $('fs-return').hidden = true;
+  function requestFs() {
     try {
       var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
       // Where supported (Chrome/Edge), lock keys so they reach the page
@@ -1360,7 +1363,21 @@
       }).catch(function () {});
     } catch (e) {}
   }
+  function enterFs() {
+    wantFs = true;
+    $('fs-soft').hidden = true;
+    $('fs-return').hidden = true;
+    requestFs();
+  }
   $('fs-return').addEventListener('click', enterFs);
+  // On the red screen, ANY click, tap or key press puts it back in full screen
+  // (the browser only allows full screen straight after a click or key press).
+  ['pointerdown', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      if (ev === 'keydown' && e.key === 'Escape') return;
+      if (!$('fs-return').hidden || !$('fs-soft').hidden) enterFs();
+    }, true);
+  });
   $('fs-soft').addEventListener('click', enterFs);   // a tap is the gesture the browser needs
 
   if (!fsSupported) {
@@ -1407,10 +1424,6 @@
     return fetch('content/hub.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        if (data.register_url) {
-          registerUrl = data.register_url;
-          if (!reg) regBtn.href = registerUrl;
-        }
         events = prepareEvents(data.events);
         buildSchedule();
         tick();
