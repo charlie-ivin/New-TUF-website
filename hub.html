@@ -50,9 +50,9 @@
     margin-bottom:8px;
   }
 
-  .clock-panel{grid-column:span 5;}
-  .tufs-panel{grid-column:span 3;}
-  .register-panel{grid-column:span 4;}
+  .clock-panel{grid-column:span 4;}
+  .tufs-panel{grid-column:span 2;}
+  .register-panel{grid-column:span 3;}
 
   /* TUFs NEEDED */
   .tufs-panel{
@@ -125,7 +125,8 @@
     text-align:center;
     gap:clamp(12px,1.6vw,20px);
   }
-  .reg-row{display:flex;align-items:center;gap:clamp(14px,2vw,26px);}
+  .reg-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(14px,2vw,26px);}
+  .canopy-panel .reg-text h2{font-size:clamp(1.2rem,2.2vw,2rem);}
   .tick{
     width:clamp(72px,9vw,120px);
     height:clamp(72px,9vw,120px);
@@ -157,7 +158,8 @@
   }
   .register-panel.done .reg-status{color:var(--go);font-weight:700;}
   .register-panel.done{background:#EEF9F2;border-color:var(--go);}
-  .register-panel.done #reg-btn{background:var(--go);border-color:var(--go);color:#fff;}
+  .register-panel.done #reg-btn,
+  .register-panel.done #canopy-btn{background:var(--go);border-color:var(--go);color:#fff;}
   .big-btn{font-size:clamp(1.1rem,1.9vw,1.7rem);padding:clamp(12px,1.4vw,18px) clamp(26px,3vw,44px);}
   .reset{
     background:none;
@@ -470,6 +472,43 @@
     font-size:.9rem;
   }
 
+  /* ADD FOOD (pop-up) */
+  .add-overlay{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(62,39,35,.82);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .add-overlay[hidden]{display:none;}
+  .add-input{
+    width:100%;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.3rem;
+    padding:12px 14px;
+    border-radius:14px;
+    border:2px solid var(--mustard);
+    margin-bottom:16px;
+    color:var(--choc);
+    background:#fff;
+    text-align:center;
+  }
+  .add-input:focus{outline:none;}
+  .remove-btn{
+    align-self:flex-start;
+    background:none;
+    border:0;
+    padding:0;
+    color:#c0392b;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
   /* SCHEDULE */
   .schedule-panel{grid-column:1 / -1;}
   .sched{
@@ -510,7 +549,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -569,6 +608,20 @@
     <button class="reset" id="reg-reset" type="button" hidden>Reset tick</button>
   </section>
 
+  <section class="panel register-panel canopy-panel" id="canopy-panel">
+    <div class="reg-row">
+      <div class="tick" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div class="reg-text">
+        <h2>List For Canopy</h2>
+        <div class="reg-status" id="canopy-status"></div>
+      </div>
+    </div>
+    <a class="btn btn-primary big-btn" id="canopy-btn" href="#">Completed?</a>
+    <button class="reset" id="canopy-reset" type="button" hidden>Reset tick</button>
+  </section>
+
   <section class="panel now-panel" id="now-panel">
     <div class="h-label">Happening now</div>
     <div class="oven-list" id="oven-list"></div>
@@ -580,6 +633,7 @@
     <div class="food-head">
       <div class="h-label">Food</div>
       <div class="food-actions">
+        <button class="btn btn-primary" id="add-food-btn" type="button">+ Add food</button>
         <button class="btn btn-primary" id="print-btn" type="button">Print week report (PDF)</button>
         <button class="reset" id="food-reset" type="button">Reset this week</button>
       </div>
@@ -596,6 +650,17 @@
     <div class="pin-title">Type the code to exit</div>
     <div class="pin-dots" id="pin-dots"></div>
     <div class="pin-keys" id="pin-keys"></div>
+  </div>
+</div>
+
+<div class="add-overlay" id="add-overlay" hidden>
+  <div class="pin-box" id="add-box" role="dialog" aria-label="Add food">
+    <div class="pin-title">Add food for this week</div>
+    <input class="add-input" id="add-input" type="text" maxlength="30" placeholder="e.g. Flapjacks" autocomplete="off">
+    <div class="pin-keys">
+      <button type="button" class="small" id="add-cancel">Cancel</button>
+      <button type="button" id="add-ok">Add</button>
+    </div>
   </div>
 </div>
 
@@ -748,7 +813,7 @@
   function ovenItems() {
     var items = weekItems();
     var out = [];
-    FOODS.forEach(function (f) {
+    allFoods().forEach(function (f) {
       var it = items[f.id];
       if (!it || !it.oven || it.ready || it.skip) return;
       var secs;
@@ -945,6 +1010,68 @@
   }
   $('reg-reset').addEventListener('click', function () { openPin('reset-reg'); });
 
+  // ---------- list for canopy tick (same code, resets each day) ----------
+  var CANOPY_KEY = 'tuf-canopy-v1';
+  var canopyBtn = $('canopy-btn');
+  canopyBtn.href = '#';
+
+  function loadCanopy() {
+    var raw = getCookie(CANOPY_KEY);
+    if (raw === null) {
+      try { raw = localStorage.getItem(CANOPY_KEY); } catch (e) {}
+    }
+    try {
+      var v = JSON.parse(raw);
+      if (v && v.date === todayStr()) return v;
+    } catch (e) {}
+    return null;
+  }
+  function saveCanopy(v) {
+    if (v) setCookie(CANOPY_KEY, JSON.stringify(v), 2);
+    else delCookie(CANOPY_KEY);
+    try {
+      if (v) localStorage.setItem(CANOPY_KEY, JSON.stringify(v));
+      else localStorage.removeItem(CANOPY_KEY);
+    } catch (e) {}
+  }
+  var canopy = loadCanopy();
+
+  function renderCanopy() {
+    var panel = $('canopy-panel');
+    if (canopy) {
+      panel.classList.add('done');
+      $('canopy-status').textContent = 'Completed at ' + canopy.time;
+      canopyBtn.textContent = 'Completed ✓';
+      canopyBtn.removeAttribute('href');
+      canopyBtn.style.pointerEvents = 'none';
+      $('canopy-reset').hidden = false;
+    } else {
+      panel.classList.remove('done');
+      $('canopy-status').textContent = '';
+      canopyBtn.textContent = 'Completed?';
+      canopyBtn.href = '#';
+      canopyBtn.style.pointerEvents = '';
+      $('canopy-reset').hidden = true;
+    }
+  }
+  canopyBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (canopy) return;
+    openPin('canopy', function () {
+      var d = new Date();
+      canopy = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+      saveCanopy(canopy);
+      renderCanopy();
+    });
+  });
+  $('canopy-reset').addEventListener('click', function () {
+    openPin('do', function () {
+      canopy = null;
+      saveCanopy(null);
+      renderCanopy();
+    });
+  });
+
   // ---------- food tracker ----------
   // Stored as { weeks: { 'YYYY-MM-DD (Monday)': { foodId: { skip, started, oven, ready } } } }
   var foodData = loadFood();
@@ -987,6 +1114,13 @@
     if (!items[id]) items[id] = {};
     return items[id];
   }
+  // The usual foods plus any extra ones added for this week
+  function allFoods() {
+    var extra = weekItems()._extra || [];
+    return FOODS.concat(extra.map(function (x) {
+      return { id: x.id, name: x.name, extra: true };
+    }));
+  }
   function statusOf(it) {
     if (it.skip) return 'skipped';
     if (it.ready) return 'ready';
@@ -1006,7 +1140,7 @@
   function renderFood() {
     var grid = $('food-grid');
     grid.textContent = '';
-    FOODS.forEach(function (f) {
+    allFoods().forEach(function (f) {
       var it = itemFor(f.id);
       var s = statusOf(it);
 
@@ -1080,6 +1214,22 @@
       card.appendChild(status);
       card.appendChild(steps);
       card.appendChild(skip);
+      if (f.extra) {
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'remove-btn';
+        rm.textContent = 'Remove this food';
+        rm.addEventListener('click', function () {
+          openPin('do', function () {
+            var items = weekItems();
+            items._extra = (items._extra || []).filter(function (x) { return x.id !== f.id; });
+            delete items[f.id];
+            saveFood();
+            renderFood();
+          });
+        });
+        card.appendChild(rm);
+      }
       grid.appendChild(card);
     });
     renderTufs();
@@ -1123,6 +1273,35 @@
     if (e.key === 'Enter') { e.preventDefault(); tufsInput.blur(); }
   });
 
+  // ---------- add a food for this week (needs the code) ----------
+  var addOverlay = $('add-overlay');
+  var addInput = $('add-input');
+  function openAdd() {
+    addInput.value = '';
+    addOverlay.hidden = false;
+    // wait a moment so the last code digit isn't typed into the box
+    setTimeout(function () { addInput.focus(); }, 80);
+  }
+  function closeAdd() { addOverlay.hidden = true; addInput.blur(); }
+  function commitAdd() {
+    var n = addInput.value.trim();
+    if (!n) return;
+    var items = weekItems();
+    if (!items._extra) items._extra = [];
+    items._extra.push({ id: 'x' + Date.now().toString(36), name: n });
+    saveFood();
+    closeAdd();
+    renderFood();
+  }
+  $('add-food-btn').addEventListener('click', function () { openPin('do', openAdd); });
+  $('add-ok').addEventListener('click', commitAdd);
+  $('add-cancel').addEventListener('click', closeAdd);
+  addInput.addEventListener('keydown', function (e) {
+    e.stopPropagation();   // keep typing away from the page's other key handlers
+    if (e.key === 'Enter') { e.preventDefault(); commitAdd(); }
+    else if (e.key === 'Escape') closeAdd();
+  });
+
   function doResetFood() {
     delete foodData.weeks[currentWeek];
     delCookie(FOOD_KEY + '-' + currentWeek);
@@ -1164,7 +1343,7 @@
     table.appendChild(thead);
 
     var tbody = document.createElement('tbody');
-    FOODS.forEach(function (f) {
+    allFoods().forEach(function (f) {
       var it = itemFor(f.id);
       var s = statusOf(it);
       var tr = document.createElement('tr');
@@ -1320,7 +1499,8 @@
       pinAction === 'print' ? 'Type the code to print' :
       pinAction === 'exit' ? 'Type the code to exit' :
       pinAction === 'do' ? 'Type the code to change this' :
-      pinAction === 'reg' ? 'Type the code to take the register' : 'Type the code to reset';
+      pinAction === 'reg' ? 'Enter code if you have taken the register' :
+      pinAction === 'canopy' ? 'Enter code if you have printed the list' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
     pinOverlay.hidden = false;
@@ -1335,7 +1515,7 @@
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do' || action === 'reg') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg' || action === 'canopy') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1506,6 +1686,8 @@
       currentDay = todayStr(d);
       reg = loadReg();
       renderReg();
+      canopy = loadCanopy();
+      renderCanopy();
       // New week: food board starts fresh automatically.
       var wk = weekStart(d);
       if (wk !== currentWeek) {
@@ -1532,6 +1714,7 @@
 
   buildSchedule();
   renderReg();
+  renderCanopy();
   renderTimeToggle();
   renderFood();
   tick();
