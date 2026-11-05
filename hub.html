@@ -472,6 +472,50 @@
     font-size:.9rem;
   }
 
+  /* HIDE DASHBOARD BUTTON (bottom left) + LOCK SCREEN */
+  .hide-btn{
+    position:fixed;
+    left:12px;
+    bottom:12px;
+    z-index:50;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:.95rem;
+    padding:8px 16px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.6);
+    background:rgba(62,39,35,.78);
+    color:#fff;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease;
+  }
+  .hide-btn:hover, .hide-btn:focus-visible{opacity:1;}
+  .lock-screen{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+    color:var(--choc);
+    background:rgba(255,248,234,.35);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+  }
+  .lock-screen[hidden]{display:none;}
+  .lock-screen b{font-size:clamp(2rem,6vw,4.2rem);line-height:1.1;text-shadow:0 2px 12px rgba(255,255,255,.9);}
+  .lock-screen span{font-size:clamp(1.1rem,2.4vw,1.8rem);font-weight:600;text-shadow:0 2px 12px rgba(255,255,255,.9);}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .lock-screen{background:rgba(255,248,234,.97);}
+  }
+
   /* FOOTER (text comes from content/site.json, same as the rest of the site) */
   .hub-footer{
     position:fixed;
@@ -563,7 +607,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, body.hub > footer, .fs-btn, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -658,6 +702,13 @@
 </main>
 
 <footer class="hub-footer" id="hub-footer">Cottesloe School — Thumbs Up Friday | Website By Charlie Ivin portfolio.charlieivin.co.uk</footer>
+
+<button class="hide-btn" id="hide-btn" type="button" aria-label="Hide dashboard">Hide dashboard</button>
+
+<div class="lock-screen" id="lock-screen" hidden>
+  <b>Thumbs Up Friday Dashboard Locked</b>
+  <span>Enter the pin to continue</span>
+</div>
 
 <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
 
@@ -1527,6 +1578,8 @@
       pinAction === 'exit' ? 'Type the code to exit' :
       pinAction === 'do' ? 'Type the code to change this' :
       pinAction === 'reg' ? 'Enter code if you have taken the register' :
+      pinAction === 'hide' ? 'Enter the pin to hide the dashboard' :
+      pinAction === 'unlock' ? 'Enter the pin to continue' :
       pinAction === 'canopy' ? 'Enter code if you have printed the list' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
@@ -1542,7 +1595,7 @@
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do' || action === 'reg' || action === 'canopy') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1567,6 +1620,29 @@
     if (pinOverlay.hidden) return;
     if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
     else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
+  });
+
+  // ---------- hide dashboard: blurs the page until the code is entered ----------
+  var lockScreen = $('lock-screen');
+  var lockGuard = false;
+  function setLocked(on) {
+    lockScreen.hidden = !on;
+    // The last digit of the code that just locked the screen must not count as a new code
+    if (on) { lockGuard = true; setTimeout(function () { lockGuard = false; }, 500); }
+    var m = document.querySelector('.hub-main');
+    if (m) m.inert = on;          // also stops keyboard (Tab/Enter) use while hidden
+  }
+  function askUnlock() {
+    if (pinOverlay.hidden) openPin('unlock', function () { setLocked(false); });
+  }
+  $('hide-btn').addEventListener('click', function () {
+    openPin('hide', function () { setLocked(true); });   // the code is needed to hide it too
+  });
+  lockScreen.addEventListener('click', askUnlock);
+  // Typing a number on the keyboard while locked opens the code box and enters it
+  document.addEventListener('keydown', function (e) {
+    if (lockGuard || lockScreen.hidden || !pinOverlay.hidden) return;
+    if (/^[0-9]$/.test(e.key)) { openPin('unlock', function () { setLocked(false); }); pinDigit(e.key); }
   });
 
   // ---------- entry gate: code needed the first time the page is opened ----------
