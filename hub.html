@@ -1779,6 +1779,7 @@
   var gateBox = $('gate-box');
   var gateDots = $('gate-dots');
   var gateEntry = '';
+  var gateGuard = false;   // ignore the key press that just logged out
   function gateUnlocked() {
     try { return sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) { return false; }
   }
@@ -1807,7 +1808,7 @@
     }
   }
   document.addEventListener('keydown', function (e) {
-    if (gate.hidden) return;
+    if (gate.hidden || gateGuard) return;
     if (/^[0-9]$/.test(e.key)) gateDigit(e.key);
     else if (e.key === 'Backspace') { gateEntry = gateEntry.slice(0, -1); renderGate(); }
   });
@@ -1823,6 +1824,9 @@
       gateEntry = '';
       renderGate();
       gate.hidden = false;
+      // the last digit of the logout code must not count as the first digit of the login code
+      gateGuard = true;
+      setTimeout(function () { gateGuard = false; gateEntry = ''; renderGate(); }, 500);
     });
   });
 
