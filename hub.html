@@ -303,12 +303,117 @@
     position:fixed;
     inset:0;
     z-index:300;
-    background:var(--cream,#fff8ea);
+    background:var(--cream,#FFF8EC);
+    display:grid;
+    grid-template-columns:clamp(300px,21%,420px) 1fr;
+  }
+  .gate[hidden]{display:none;}
+  .gate-side{
+    background:#fff;
+    box-shadow:0 0 24px rgba(62,39,35,.08);
+    position:relative;
+    z-index:1;
+    padding:clamp(28px,6vh,56px) clamp(24px,3.4vw,64px);
+    overflow:auto;
+  }
+  .gate-brand{
     display:flex;
     align-items:center;
     justify-content:center;
+    gap:10px;
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.4rem,1.9vw,2rem);
+    color:var(--choc,#3E2723);
+    margin:8px 0 clamp(32px,8vh,64px);
+    white-space:nowrap;
   }
-  .gate[hidden]{display:none;}
+  .gate-brand span{font-weight:500;}
+  .gate-brand i{
+    width:1.3em;
+    height:1.3em;
+    background:var(--mustard,#E8A33D);
+    -webkit-mask:url(assets/2.png) center/contain no-repeat;
+    mask:url(assets/2.png) center/contain no-repeat;
+  }
+  .gate-side .pin-box{
+    width:100%;
+    padding:0;
+    background:transparent;
+    box-shadow:none;
+    text-align:left;
+  }
+  .gate-side .pin-title{
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:.8rem;
+    color:#a87a00;
+    margin-bottom:0;
+  }
+  .gate-field{
+    border-bottom:2px solid var(--mustard,#E8A33D);
+    padding:14px 0 12px;
+  }
+  .gate-side .pin-dots{justify-content:flex-start;margin-bottom:0;gap:12px;min-height:18px;}
+  .gate-side .btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    text-decoration:none;
+    margin-top:32px;
+  }
+  .gate-note{
+    margin-top:36px;
+    background:#f6f1e6;
+    border-radius:12px;
+    padding:14px 16px;
+    display:flex;
+    gap:12px;
+    font-size:.8rem;
+    line-height:1.4;
+    color:#5a4038;
+  }
+  .gate-note .ico{
+    flex:none;
+    width:20px;
+    height:20px;
+    border:1.5px solid var(--mustard,#E8A33D);
+    border-radius:50%;
+    color:#a87a00;
+    font-weight:700;
+    font-size:.75rem;
+    display:grid;
+    place-items:center;
+  }
+  .gate-note a{color:#a87a00;overflow-wrap:anywhere;}
+  .gate-main{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(40px,12vh,140px);
+    padding:24px;
+    text-align:center;
+  }
+  .gate-logo{
+    width:clamp(140px,17vw,300px);
+    aspect-ratio:1;
+    background:var(--mustard,#E8A33D);
+    -webkit-mask:url(assets/2.png) center/contain no-repeat;
+    mask:url(assets/2.png) center/contain no-repeat;
+  }
+  .gate-main h1{
+    font-family:'Fredoka',sans-serif;
+    font-weight:500;
+    font-size:clamp(1.6rem,2.6vw,2.6rem);
+    line-height:1.15;
+    color:var(--choc,#3E2723);
+    margin:0;
+  }
+  @media (max-width:800px){
+    .gate{grid-template-columns:1fr;}
+    .gate-main{display:none;}
+  }
 
   /* Gentle "tap to return" cover (used after printing, not a warning) */
   .fs-soft{
@@ -740,9 +845,21 @@
 </div>
 
 <div class="gate" id="gate">
-  <div class="pin-box" id="gate-box" role="dialog" aria-label="Enter code to open">
-    <div class="pin-title">👍 Type the code to open</div>
-    <div class="pin-dots" id="gate-dots"></div>
+  <aside class="gate-side">
+    <div class="gate-brand"><i aria-hidden="true"></i>Thumbs Up Friday <span>Hub</span></div>
+    <div class="pin-box" id="gate-box" role="dialog" aria-label="Enter code to open">
+      <div class="pin-title">Type the code to open</div>
+      <div class="gate-field"><div class="pin-dots" id="gate-dots"></div></div>
+    </div>
+    <a class="btn btn-primary" href="/">Main site home</a>
+    <div class="gate-note">
+      <span class="ico">i</span>
+      <span>Type the code on the keyboard. The main Thumbs Up Friday site is also at <a href="/">thumbs-up-friday.charlieivin.co.uk</a></span>
+    </div>
+  </aside>
+  <div class="gate-main">
+    <div class="gate-logo" role="img" aria-label="Thumbs up"></div>
+    <h1>Cottesloe School — Thumbs Up Friday</h1>
   </div>
 </div>
 
@@ -1746,6 +1863,7 @@
     }
   }, true);
   window.addEventListener('beforeunload', function (e) {
+    if (gate && !gate.hidden) return;   // login screen showing: let the Main site home link work
     e.preventDefault();
     e.returnValue = '';
     return '';
