@@ -217,11 +217,16 @@
   }
 
   /* FULL SCREEN BUTTON */
-  .fs-btn{
+  .dock{
     position:fixed;
     right:12px;
     bottom:12px;
     z-index:50;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .fs-btn, .logout-btn{
     font-family:'Fredoka',sans-serif;
     font-weight:600;
     font-size:.95rem;
@@ -234,7 +239,7 @@
     opacity:.7;
     transition:opacity .2s ease;
   }
-  .fs-btn:hover, .fs-btn:focus-visible{opacity:1;}
+  .fs-btn:hover, .fs-btn:focus-visible, .logout-btn:hover, .logout-btn:focus-visible{opacity:1;}
 
   /* RETURN-TO-FULL-SCREEN COVER (shown if full screen is left without the code) */
   .fs-return{
@@ -607,7 +612,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, body.hub > footer, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .dock, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -710,7 +715,10 @@
   <span>Enter the pin to continue</span>
 </div>
 
-<button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
+<div class="dock">
+  <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
+  <button class="logout-btn" id="logout-btn" type="button" aria-label="Log out">Log out</button>
+</div>
 
 <div class="pin-overlay" id="pin-overlay" hidden>
   <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code">
@@ -1578,6 +1586,7 @@
       pinAction === 'exit' ? 'Type the code to exit' :
       pinAction === 'do' ? 'Type the code to change this' :
       pinAction === 'reg' ? 'Enter code if you have taken the register' :
+      pinAction === 'logout' ? 'Enter the pin to log out' :
       pinAction === 'hide' ? 'Enter the pin to hide the dashboard' :
       pinAction === 'unlock' ? 'Enter the pin to continue' :
       pinAction === 'canopy' ? 'Enter code if you have printed the list' : 'Type the code to reset';
@@ -1595,7 +1604,7 @@
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide' || action === 'logout') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1687,6 +1696,18 @@
   });
   gate.hidden = gateUnlocked();
   renderGate();
+
+  // ---------- log out: needs the code, leaves full screen and brings the entry code screen back ----------
+  $('logout-btn').addEventListener('click', function () {
+    openPin('logout', function () {
+      try { sessionStorage.removeItem(GATE_KEY); } catch (e) {}
+      setLocked(false);
+      if (isFs()) exitFs();
+      gateEntry = '';
+      renderGate();
+      gate.hidden = false;
+    });
+  });
 
   // Ctrl/Cmd+P opens the browser print dialog, which drops you out of full screen.
   // Intercept it: in full screen ask for the code first, otherwise print the report.
