@@ -1455,6 +1455,16 @@
     var y = Math.max(0, (avail - main.offsetHeight * lo) / 2);
     main.style.transform = (lo === 1 && y < 1) ? '' :
       'translateY(' + y.toFixed(1) + 'px) scale(' + lo + ')';
+
+    // Put the footer in the middle of the space between the boxes and the bottom of the screen.
+    if (foot) {
+      var navH = nav ? nav.offsetHeight : 0;
+      var contentBottom = navH + y + main.offsetHeight * lo;
+      var below = window.innerHeight - contentBottom;
+      var top = contentBottom + Math.max(0, (below - foot.offsetHeight) / 2);
+      foot.style.top = top.toFixed(1) + 'px';
+      foot.style.bottom = 'auto';
+    }
   }
   window.addEventListener('resize', scheduleFit);
   window.addEventListener('load', scheduleFit);
