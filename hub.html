@@ -474,7 +474,12 @@
 
   /* FOOTER (text comes from content/site.json, same as the rest of the site) */
   .hub-footer{
-    flex:none;
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:40;
+    background:var(--cream,#fff8ea);
     text-align:center;
     padding:8px 12px;
     font-size:clamp(.7rem,.9vw,.85rem);
