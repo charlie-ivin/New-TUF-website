@@ -472,6 +472,15 @@
     font-size:.9rem;
   }
 
+  /* FOOTER (text comes from content/site.json, same as the rest of the site) */
+  .hub-footer{
+    flex:none;
+    text-align:center;
+    padding:8px 12px;
+    font-size:clamp(.7rem,.9vw,.85rem);
+    color:#8a7a6a;
+  }
+
   /* ADD FOOD (pop-up) */
   .add-overlay{
     position:fixed;
@@ -549,7 +558,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, .fs-btn, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .fs-btn, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -642,6 +651,8 @@
   </section>
 
 </main>
+
+<footer class="hub-footer" id="hub-footer">Cottesloe School — Thumbs Up Friday | Website By Charlie Ivin portfolio.charlieivin.co.uk</footer>
 
 <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
 
@@ -1407,7 +1418,8 @@
     var main = document.querySelector('.hub-main');
     var nav = document.querySelector('body.hub > nav');
     if (!main) return;
-    var avail = window.innerHeight - (nav ? nav.offsetHeight : 0) - 2;
+    var foot = document.querySelector('body.hub > footer');
+    var avail = window.innerHeight - (nav ? nav.offsetHeight : 0) - (foot ? foot.offsetHeight : 0) - 2;
 
     // Does the content fit at scale s? (Widening the box by 1/s keeps it
     // filling the screen width once it has been scaled.)
@@ -1700,7 +1712,22 @@
   }
 
   // ---------- content ----------
+  // Footer text comes from content/site.json, the same file the rest of the site uses.
+  // Shown as plain text (not a link) so nobody can click out of the locked screen.
+  function loadFooter() {
+    return fetch('content/site.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (site) {
+        if (!site || !site.footer_text) return;
+        var url = String(site.footer_credit_url || '').replace(/^https?:\/\//, '');
+        $('hub-footer').textContent = site.footer_text + ' | ' + (site.footer_credit_label || '') + ' ' + url;
+        scheduleFit();
+      })
+      .catch(function () { /* keep the built-in footer text */ });
+  }
+
   function loadContent() {
+    loadFooter();
     return fetch('content/hub.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
