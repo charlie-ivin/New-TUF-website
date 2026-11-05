@@ -362,6 +362,7 @@
     text-decoration:none;
     margin-top:32px;
   }
+  .gate-side button.btn{border:0;cursor:pointer;}
   .gate-note{
     margin-top:36px;
     background:#EADFC8;
@@ -862,15 +863,15 @@
       <div class="pin-title">Type the code to open</div>
       <div class="gate-field"><div class="pin-dots" id="gate-dots"></div></div>
     </div>
-    <a class="btn btn-primary" href="/">Main site home</a>
+    <button type="button" class="btn btn-primary" id="gate-login">Login</button>
     <div class="gate-note">
       <span class="ico">i</span>
-      <span>Type the code on the keyboard. The main Thumbs Up Friday site is also at <a href="/">thumbs-up-friday.charlieivin.co.uk</a></span>
+      <span>Type the code on the keyboard. The main Thumbs Up Friday site is: <a href="/">thumbs-up-friday.charlieivin.co.uk</a></span>
     </div>
   </aside>
   <div class="gate-main">
     <div class="gate-logo" role="img" aria-label="Thumbs up"></div>
-    <h1>Cottesloe School — Thumbs Up Friday Managing Hub</h1>
+    <h1>The Cottesloe School — Thumbs Up Friday Managing Hub</h1>
     <div class="gate-credit">Website By Charlie Ivin <a href="https://portfolio.charlieivin.co.uk/" target="_blank" rel="noopener">portfolio.charlieivin.co.uk</a></div>
   </div>
 </div>
@@ -1807,22 +1808,27 @@
     if (gateEntry.length >= GATE_PIN.length) return;
     gateEntry += d;
     renderGate();
-    if (gateEntry.length === GATE_PIN.length) {
-      if (gateEntry === GATE_PIN) {
-        try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
-        gate.hidden = true;
-        gateEntry = '';
-        scheduleFit();
-      } else {
-        gateBox.classList.add('bad');
-        setTimeout(function () { gateBox.classList.remove('bad'); gateEntry = ''; renderGate(); }, 450);
-      }
+  }
+  // The code is only checked when Login is pressed (or Enter)
+  function gateSubmit() {
+    if (gate.hidden || gateGuard) return;
+    if (gateEntry === GATE_PIN) {
+      try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
+      gate.hidden = true;
+      gateEntry = '';
+      renderGate();
+      scheduleFit();
+    } else {
+      gateBox.classList.add('bad');
+      setTimeout(function () { gateBox.classList.remove('bad'); gateEntry = ''; renderGate(); }, 450);
     }
   }
+  $('gate-login').addEventListener('click', gateSubmit);
   document.addEventListener('keydown', function (e) {
     if (gate.hidden || gateGuard) return;
     if (/^[0-9]$/.test(e.key)) gateDigit(e.key);
     else if (e.key === 'Backspace') { gateEntry = gateEntry.slice(0, -1); renderGate(); }
+    else if (e.key === 'Enter') { e.preventDefault(); gateSubmit(); }
   });
   gate.hidden = gateUnlocked();
   renderGate();
@@ -1879,7 +1885,7 @@
     }
   }, true);
   window.addEventListener('beforeunload', function (e) {
-    if (gate && !gate.hidden) return;   // login screen showing: let the Main site home link work
+    if (gate && !gate.hidden) return;   // login screen showing: let the link in the info box work
     e.preventDefault();
     e.returnValue = '';
     return '';
