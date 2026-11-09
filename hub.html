@@ -594,9 +594,11 @@
     font-size:.9rem;
   }
 
-  /* In full screen: hide the food buttons (print, add food, hide/show not making) and the add-batch links */
+  /* In full screen: hide the food buttons (print, add food, hide/show not making) and the links on each card (add batch, not making this week, remove) */
   html.is-fs .food-actions,
-  html.is-fs .batch-btn{display:none !important;}
+  html.is-fs .batch-btn,
+  html.is-fs .skip-btn,
+  html.is-fs .remove-btn{display:none !important;}
 
   /* HIDE DASHBOARD BUTTON (bottom left) + LOCK SCREEN */
   .dock-left{
