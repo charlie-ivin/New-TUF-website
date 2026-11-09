@@ -1881,15 +1881,20 @@
   };
   // Who logged in first today (saved on this PC for the day)
   var FIRST_KEY = 'tuf-first-login-v1';
+  // Not saved on the PC any more: it only lasts for the current login. Logging out (or closing the tab) clears it.
+  try { localStorage.removeItem(FIRST_KEY); } catch (e) {}   // remove the old saved value
   function firstLoginName() {
     try {
-      var v = JSON.parse(localStorage.getItem(FIRST_KEY));
+      var v = JSON.parse(sessionStorage.getItem(FIRST_KEY));
       if (v && v.day === todayStr()) return v.name;
     } catch (e) {}
     return null;
   }
   function setFirstLogin(name) {
-    try { localStorage.setItem(FIRST_KEY, JSON.stringify({ day: todayStr(), name: name })); } catch (e) {}
+    try { sessionStorage.setItem(FIRST_KEY, JSON.stringify({ day: todayStr(), name: name })); } catch (e) {}
+  }
+  function clearFirstLogin() {
+    try { sessionStorage.removeItem(FIRST_KEY); } catch (e) {}
   }
   function userForPin(code, action) {
     var perm = PERM_FOR[action] || 'admin';
@@ -2071,7 +2076,8 @@
   $('welcome-no').addEventListener('click', function () {
     hideWelcome();
     try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
-      currentUser = null;
+    clearFirstLogin();
+    currentUser = null;
     setLocked(false);
     gateEntry = '';
     renderGate();
@@ -2116,6 +2122,7 @@
   $('logout-btn').addEventListener('click', function () {
     openPin('logout', function () {
       try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
+      clearFirstLogin();
       currentUser = null;
       setLocked(false);
       if (isFs()) exitFs();
