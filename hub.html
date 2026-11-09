@@ -298,6 +298,93 @@
     font-weight:500;
   }
 
+  /* WELCOME MESSAGE (shown for a few seconds after logging in) */
+  .welcome{
+    position:fixed;
+    inset:0;
+    z-index:250;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(62,39,35,.7);
+    cursor:default;
+    font-family:'Fredoka',sans-serif;
+  }
+  .welcome[hidden]{display:none;}
+  .welcome-card{
+    background:var(--card-bg,#FFFDF7);
+    border:3px solid var(--mustard,#E8A33D);
+    border-radius:28px;
+    padding:clamp(28px,5vw,64px) clamp(32px,6vw,96px);
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    max-width:min(92vw,900px);
+  }
+  .welcome h1{
+    font-size:clamp(2.6rem,8vw,6rem);
+    line-height:1.05;
+    color:var(--choc,#3E2723);
+    margin:0 0 10px;
+  }
+  .welcome p{
+    font-size:clamp(1.1rem,2.6vw,2rem);
+    font-weight:500;
+    color:#5a4038;
+    margin:0;
+  }
+  .welcome-warn{
+    margin:24px auto 0;
+    max-width:44em;
+    background:#FFF3E6;
+    border:2px solid #d62828;
+    border-radius:18px;
+    padding:16px 22px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-family:'Inter',sans-serif;
+    font-size:clamp(1rem,2vw,1.5rem);
+    line-height:1.35;
+    color:var(--choc,#3E2723);
+  }
+  .welcome-warn strong{
+    font-family:'Fredoka',sans-serif;
+    font-size:1.25em;
+    color:#d62828;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .welcome-ask{
+    margin-top:22px !important;
+    font-weight:600 !important;
+    color:var(--choc,#3E2723) !important;
+  }
+  .welcome-btns{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:14px;
+    margin-top:16px;
+  }
+  .welcome button.btn{
+    cursor:pointer;
+    font-size:clamp(1rem,2vw,1.4rem);
+  }
+  .welcome button.btn-primary{border:0;}
+  .welcome button.btn-outline{background:transparent;}
+  .welcome button.btn-outline:hover{background:var(--choc,#3E2723);color:var(--cream,#FFF8EC);}
+  .welcome.show{animation:welcomeFade .4s ease forwards;}
+  .welcome.show .welcome-card{animation:welcomePop .5s ease-out;}
+  @keyframes welcomeFade{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+  @keyframes welcomePop{
+    from{transform:scale(.9);}
+    to{transform:scale(1);}
+  }
+
   /* ENTRY GATE (code needed to open the page) */
   .gate{
     position:fixed;
@@ -742,7 +829,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, body.hub > footer, .dock, .dock-left, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .welcome, .dock, .dock-left, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -867,6 +954,22 @@
     <div class="pin-keys">
       <button type="button" class="small" id="add-cancel">Cancel</button>
       <button type="button" id="add-ok">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="welcome" id="welcome" hidden>
+  <div class="welcome-card">
+    <h1 id="welcome-title">Welcome</h1>
+    <p id="welcome-line">Welcome to the Thumbs Up Friday Managing Hub</p>
+    <div class="welcome-warn">
+      <strong>Trained TUF Staff only</strong>
+      <span>If you have not been trained to use the Managing Hub, please do not use it. Please ask a trained member of TUF Staff to help you instead.</span>
+    </div>
+    <p class="welcome-ask" id="welcome-ask">Please confirm who you are.</p>
+    <div class="welcome-btns">
+      <button type="button" class="btn btn-primary" id="welcome-ok">Yes, that is me</button>
+      <button type="button" class="btn btn-outline" id="welcome-no">No, that is not me</button>
     </div>
   </div>
 </div>
@@ -1285,7 +1388,7 @@
     });
   });
   $('canopy-reset').addEventListener('click', function () {
-    openPin('do', function () {
+    openPin('canopyreset', function () {
       canopy = null;
       saveCanopy(null);
       renderCanopy();
@@ -1431,7 +1534,7 @@
             renderFood();
           }
           // Ticking is free; un-ticking needs the code.
-          if (itemFor(f.id)[st.id]) openPin('do', toggle);
+          if (itemFor(f.id)[st.id]) openPin('undo', toggle);
           else toggle();
         });
         steps.appendChild(b);
@@ -1500,7 +1603,7 @@
   }
   function startTufsEdit() {
     if (!tufsInput.readOnly) return;
-    openPin('do', function () {
+    openPin('tufs', function () {
       // wait a moment so the last code digit isn't typed into the box
       setTimeout(function () {
         tufsInput.readOnly = false;
@@ -1752,7 +1855,58 @@
   }
 
   // Exit code. Change this to whatever you like (4 digits is the tidiest).
-  var EXIT_PIN = '3756';
+  // PEOPLE WHO CAN USE THE HUB. Add a line to add someone. Every code must be 4 digits.
+  //   all: true            = full control
+  //   can: [...]           = only these things:  'reg' (take the register), 'canopy' (List For Canopy),
+  //                          'tufs' (change TUFs Needed), 'undo' (un-tick a food step)
+  //   limitedIfNotFirst    = full control when they are the FIRST person to log in that day;
+  //                          if someone else (Charlie) logged in first, they can only do the things in limited: [...]
+  // Log in, hide/unlock the dashboard and log out: Charlie always. Mrs Delaney only if she logged in first
+  // (or nobody has logged in yet today, in which case logging in makes her the first).
+  var USERS = [
+    { name: 'Charlie Ivin',  pin: '3756', all: true },
+    { name: 'Mrs T Delaney', pin: '7405', all: true, limitedIfNotFirst: true, limited: ['reg', 'canopy', 'tufs', 'undo'] }
+  ];
+  var EXIT_PIN = USERS[0].pin;   // only used for the length of the code
+  var currentUser = null;        // who logged in (shown in the welcome message)
+
+  // What each code prompt needs. Anything not listed here is full access only.
+  var PERM_FOR = {
+    'reg': 'reg', 'reset-reg': 'reg',
+    'canopy': 'canopy', 'canopyreset': 'canopy',
+    'tufs': 'tufs',
+    'undo': 'undo',
+    'exit': 'exit',
+    'unlock': 'any', 'hide': 'any', 'logout': 'any'
+  };
+  // Who logged in first today (saved on this PC for the day)
+  var FIRST_KEY = 'tuf-first-login-v1';
+  function firstLoginName() {
+    try {
+      var v = JSON.parse(localStorage.getItem(FIRST_KEY));
+      if (v && v.day === todayStr()) return v.name;
+    } catch (e) {}
+    return null;
+  }
+  function setFirstLogin(name) {
+    try { localStorage.setItem(FIRST_KEY, JSON.stringify({ day: todayStr(), name: name })); } catch (e) {}
+  }
+  function userForPin(code, action) {
+    var perm = PERM_FOR[action] || 'admin';
+    for (var i = 0; i < USERS.length; i++) {
+      var u = USERS[i];
+      if (u.pin !== code) continue;
+      var ok;
+      if (perm === 'any') ok = !u.limitedIfNotFirst || !firstLoginName() || firstLoginName() === u.name;   // log in / hide / unlock / log out: not allowed for her if someone else logged in first
+      else if (u.limitedIfNotFirst) ok = (firstLoginName() === u.name) || (u.limited && u.limited.indexOf(perm) > -1);
+      else ok = !!u.all || !!(u.can && u.can.indexOf(perm) > -1);
+      if (!ok) continue;
+      // leaving full screen: this person's code only works if they are the one who logged in
+      if (perm === 'exit' && u.limitedIfNotFirst && currentUser !== u) continue;
+      return u;
+    }
+    return null;
+  }
   var pinEntry = '';
   var pinOverlay = $('pin-overlay');
   var pinBox = $('pin-box');
@@ -1776,11 +1930,14 @@
       pinAction === 'print' ? 'Type the code to print' :
       pinAction === 'exit' ? 'Type the code to exit' :
       pinAction === 'do' ? 'Type the code to change this' :
+      pinAction === 'tufs' ? 'Type the code to change this' :
       pinAction === 'reg' ? 'Enter code if you have taken the register' :
       pinAction === 'resetall' ? 'Enter the pin to reset everything' :
       pinAction === 'logout' ? 'Enter the pin to log out' :
       pinAction === 'hide' ? 'Enter the pin to hide the dashboard' :
       pinAction === 'unlock' ? 'Enter the pin to continue' :
+      pinAction === 'undo' ? 'Enter the pin to undo this' :
+      pinAction === 'canopyreset' ? 'Type the code to change this' :
       pinAction === 'canopy' ? 'Enter code if you have printed the list' : 'Type the code to reset';
     pinEntry = '';
     renderPin();
@@ -1792,15 +1949,19 @@
     pinEntry += d;
     renderPin();
     if (pinEntry.length === EXIT_PIN.length) {
-      if (pinEntry === EXIT_PIN) {
+      if (userForPin(pinEntry, pinAction)) {
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide' || action === 'logout' || action === 'resetall') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'tufs' || action === 'unlock' || action === 'hide' || action === 'logout' || action === 'resetall' || action === 'undo' || action === 'canopyreset') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
       } else {
+        // a real code that is just not allowed to do this
+        for (var ui = 0; ui < USERS.length; ui++) {
+          if (USERS[ui].pin === pinEntry) pinBox.querySelector('.pin-title').textContent = 'This code cannot do that';
+        }
         pinBox.classList.add('bad');
         setTimeout(function () { pinBox.classList.remove('bad'); pinEntry = ''; renderPin(); }, 450);
       }
@@ -1882,15 +2043,55 @@
     gateEntry += d;
     renderGate();
   }
+  // Welcome / trained-staff notice in the middle of the screen after logging in
+  var welcomeEl = $('welcome');
+  var welcomeTimer = null;
+  function hideWelcome() {
+    clearTimeout(welcomeTimer);
+    welcomeEl.hidden = true;
+    welcomeEl.classList.remove('show');
+  }
+  function showWelcome() {
+    hideWelcome();
+    var name = currentUser ? currentUser.name : '';
+    $('welcome-title').textContent = 'Welcome' + (name ? ', ' + name : '');
+    $('welcome-ask').textContent = name
+      ? 'Please confirm that you are ' + name + ' and that you have been trained to use the Managing Hub.'
+      : 'Please confirm that you have been trained to use the Managing Hub.';
+    if (currentUser && currentUser.limitedIfNotFirst && firstLoginName() !== currentUser.name) {
+      $('welcome-ask').textContent += ' ' + firstLoginName() + ' logged in first today, so you can take the Register, do the List For Canopy, change TUFs Needed and undo food steps.';
+    }
+    $('welcome-ok').textContent = name ? 'Yes, I am ' + name : 'Yes, I confirm';
+    welcomeEl.hidden = false;
+    void welcomeEl.offsetWidth;          // restart the fade animation
+    welcomeEl.classList.add('show');
+  }
+  $('welcome-ok').addEventListener('click', hideWelcome);   // stays until one of the two buttons is pressed
+  // "No, that is not me": straight back to the login screen
+  $('welcome-no').addEventListener('click', function () {
+    hideWelcome();
+    try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
+      currentUser = null;
+    setLocked(false);
+    gateEntry = '';
+    renderGate();
+    gate.hidden = false;
+  });
+
   // The code is only checked when Login is pressed (or Enter)
   function gateSubmit() {
     if (gate.hidden || gateGuard) return;
-    if (gateEntry === GATE_PIN) {
+    var who = userForPin(gateEntry, 'unlock');   // 'unlock' = anyone with a code may log in
+    if (who) {
+      currentUser = who;
+      if (!firstLoginName()) setFirstLogin(who.name);   // the first login of the day decides who has full control
+      try { sessionStorage.setItem('tuf-user-v1', who.name); } catch (e) {}
       try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
       gate.hidden = true;
       gateEntry = '';
       renderGate();
       scheduleFit();
+      showWelcome();
     } else {
       gateBox.classList.add('bad');
       setTimeout(function () { gateBox.classList.remove('bad'); gateEntry = ''; renderGate(); }, 450);
@@ -1904,12 +2105,18 @@
     else if (e.key === 'Enter') { e.preventDefault(); gateSubmit(); }
   });
   gate.hidden = gateUnlocked();
+  // remember who logged in if the page is reloaded
+  try {
+    var savedUser = sessionStorage.getItem('tuf-user-v1');
+    if (savedUser && gate.hidden) USERS.forEach(function (u) { if (u.name === savedUser) currentUser = u; });
+  } catch (e) {}
   renderGate();
 
   // ---------- log out: needs the code, leaves full screen and brings the entry code screen back ----------
   $('logout-btn').addEventListener('click', function () {
     openPin('logout', function () {
-      try { sessionStorage.removeItem(GATE_KEY); } catch (e) {}
+      try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
+      currentUser = null;
       setLocked(false);
       if (isFs()) exitFs();
       gateEntry = '';
