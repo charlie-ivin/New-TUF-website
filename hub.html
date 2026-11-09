@@ -1320,11 +1320,33 @@
     return items[id];
   }
   // The usual foods plus any extra ones added for this week
+  // Extra batches (e.g. "Cupcakes - batch 2") sit straight after the food they belong to
   function allFoods() {
     var extra = weekItems()._extra || [];
-    return FOODS.concat(extra.map(function (x) {
-      return { id: x.id, name: x.name, extra: true };
-    }));
+    var out = [];
+    function addWithBatches(f) {
+      out.push(f);
+      extra.forEach(function (x) {
+        if (x.base === f.name) out.push({ id: x.id, name: x.name, extra: true, batch: true, base: x.base, n: x.n });
+      });
+    }
+    FOODS.forEach(addWithBatches);
+    extra.forEach(function (x) {
+      if (!x.base) addWithBatches({ id: x.id, name: x.name, extra: true });
+    });
+    return out;
+  }
+  // Add another batch of a food: it gets its own Starting / In oven / Ready buttons and timer
+  function addBatch(f) {
+    var base = f.base || f.name;
+    var items = weekItems();
+    if (!items._extra) items._extra = [];
+    var max = 1;
+    items._extra.forEach(function (x) { if (x.base === base && x.n > max) max = x.n; });
+    var n = max + 1;
+    items._extra.push({ id: 'x' + Date.now().toString(36), name: base + ' — batch ' + n, base: base, n: n });
+    saveFood();
+    renderFood();
   }
   function statusOf(it) {
     if (it.skip) return 'skipped';
@@ -1419,15 +1441,29 @@
       card.appendChild(status);
       card.appendChild(steps);
       card.appendChild(skip);
+      if (!it.skip) {
+        var bb = document.createElement('button');
+        bb.type = 'button';
+        bb.className = 'skip-btn';
+        bb.textContent = '+ Add another batch';
+        bb.addEventListener('click', function () {
+          openPin('do', function () { addBatch(f); });
+        });
+        card.appendChild(bb);
+      }
       if (f.extra) {
         var rm = document.createElement('button');
         rm.type = 'button';
         rm.className = 'remove-btn';
-        rm.textContent = 'Remove this food';
+        rm.textContent = f.batch ? 'Remove this batch' : 'Remove this food';
         rm.addEventListener('click', function () {
           openPin('do', function () {
             var items = weekItems();
-            items._extra = (items._extra || []).filter(function (x) { return x.id !== f.id; });
+            items._extra = (items._extra || []).filter(function (x) {
+              if (x.id === f.id) return false;
+              if (!f.batch && x.base === f.name) { delete items[x.id]; return false; }   // removing a food removes its batches
+              return true;
+            });
             delete items[f.id];
             saveFood();
             renderFood();
