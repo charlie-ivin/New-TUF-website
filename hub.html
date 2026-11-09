@@ -595,11 +595,16 @@
   }
 
   /* HIDE DASHBOARD BUTTON (bottom left) + LOCK SCREEN */
-  .hide-btn{
+  .dock-left{
     position:fixed;
     left:12px;
     bottom:12px;
     z-index:50;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .hide-btn, .reset-all-btn{
     font-family:'Fredoka',sans-serif;
     font-weight:600;
     font-size:.95rem;
@@ -612,7 +617,7 @@
     opacity:.7;
     transition:opacity .2s ease;
   }
-  .hide-btn:hover, .hide-btn:focus-visible{opacity:1;}
+  .hide-btn:hover, .hide-btn:focus-visible, .reset-all-btn:hover, .reset-all-btn:focus-visible{opacity:1;}
   .lock-screen{
     position:fixed;
     inset:0;
@@ -729,7 +734,7 @@
 
   @media print{
     @page{margin:16mm;}
-    body.hub > nav, body.hub > .hub-main, body.hub > footer, .dock, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .dock, .dock-left, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
     body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
     #print-report{
       display:block;
@@ -815,7 +820,6 @@
       <div class="food-actions">
         <button class="btn btn-primary" id="add-food-btn" type="button">+ Add food</button>
         <button class="btn btn-primary" id="print-btn" type="button">Print week report (PDF)</button>
-        <button class="reset" id="food-reset" type="button">Reset this week</button>
       </div>
     </div>
     <div class="food-grid" id="food-grid"></div>
@@ -825,7 +829,10 @@
 
 <footer class="hub-footer" id="hub-footer">Cottesloe School — Thumbs Up Friday | Website By Charlie Ivin portfolio.charlieivin.co.uk</footer>
 
-<button class="hide-btn" id="hide-btn" type="button" aria-label="Hide dashboard">Hide dashboard</button>
+<div class="dock-left">
+  <button class="hide-btn" id="hide-btn" type="button" aria-label="Hide dashboard">Hide dashboard</button>
+  <button class="reset-all-btn" id="reset-all-btn" type="button" aria-label="Reset all">Reset all</button>
+</div>
 
 <div class="lock-screen" id="lock-screen" hidden>
   <b>Thumbs Up Friday Dashboard Locked</b>
@@ -1549,7 +1556,6 @@
     saveFood();
     renderFood();
   }
-  $('food-reset').addEventListener('click', function () { openPin('reset-food'); });
 
   // ---------- weekly report (print / save as PDF) ----------
   function el(tag, text, cls) {
@@ -1752,6 +1758,7 @@
       pinAction === 'exit' ? 'Type the code to exit' :
       pinAction === 'do' ? 'Type the code to change this' :
       pinAction === 'reg' ? 'Enter code if you have taken the register' :
+      pinAction === 'resetall' ? 'Enter the pin to reset everything' :
       pinAction === 'logout' ? 'Enter the pin to log out' :
       pinAction === 'hide' ? 'Enter the pin to hide the dashboard' :
       pinAction === 'unlock' ? 'Enter the pin to continue' :
@@ -1770,7 +1777,7 @@
         var action = pinAction, fn = pinFn;
         closePin();
         if (action === 'print') doPrint();
-        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide' || action === 'logout') { if (fn) fn(); }
+        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'unlock' || action === 'hide' || action === 'logout' || action === 'resetall') { if (fn) fn(); }
         else if (action === 'reset-reg') doResetReg();
         else if (action === 'reset-food') doResetFood();
         else exitFs();
@@ -1810,6 +1817,17 @@
   function askUnlock() {
     if (pinOverlay.hidden) openPin('unlock', function () { setLocked(false); });
   }
+  // Reset all: clears this week's food board (incl. added foods, batches and TUFs needed),
+  // the Register tick and the List For Canopy tick. Needs the code.
+  $('reset-all-btn').addEventListener('click', function () {
+    openPin('resetall', function () {
+      doResetFood();
+      doResetReg();
+      canopy = null;
+      saveCanopy(null);
+      renderCanopy();
+    });
+  });
   $('hide-btn').addEventListener('click', function () {
     openPin('hide', function () { setLocked(true); });   // the code is needed to hide it too
   });
