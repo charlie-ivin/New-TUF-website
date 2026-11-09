@@ -599,6 +599,8 @@
   html.is-fs .batch-btn,
   html.is-fs .skip-btn,
   html.is-fs .remove-btn{display:none !important;}
+  /* Foods marked "Not making this week" are hidden in full screen and shown when not in full screen */
+  html.is-fs .food.skipped{display:none;}
 
   /* HIDE DASHBOARD BUTTON (bottom left) + LOCK SCREEN */
   .dock-left{
@@ -824,7 +826,6 @@
     <div class="food-head">
       <div class="h-label">Food</div>
       <div class="food-actions">
-        <button class="reset" id="skipped-toggle" type="button">Hide not making this week</button>
         <button class="btn btn-primary" id="add-food-btn" type="button">+ Add food</button>
         <button class="btn btn-primary" id="print-btn" type="button">Print week report (PDF)</button>
       </div>
@@ -1378,19 +1379,12 @@
     return 'Not started';
   }
 
-  // Option to hide the foods marked "Not making this week" (needs the code to switch)
-  var SKIP_KEY = 'tuf-hide-skipped-v1';
-  var hideSkipped = false;
-  try { hideSkipped = localStorage.getItem(SKIP_KEY) === '1'; } catch (e) {}
-
   function renderFood() {
     var grid = $('food-grid');
     grid.textContent = '';
-    $('skipped-toggle').textContent = hideSkipped ? 'Show not making this week' : 'Hide not making this week';
     allFoods().forEach(function (f) {
       var it = itemFor(f.id);
       var s = statusOf(it);
-      if (hideSkipped && s === 'skipped') return;   // hidden from the board (still on the printed report)
 
       var card = document.createElement('div');
       card.className = 'food' + (s === 'skipped' ? ' skipped' : (s !== 'none' ? ' s-' + s : ''));
@@ -1562,14 +1556,6 @@
     e.stopPropagation();   // keep typing away from the page's other key handlers
     if (e.key === 'Enter') { e.preventDefault(); commitAdd(); }
     else if (e.key === 'Escape') closeAdd();
-  });
-
-  $('skipped-toggle').addEventListener('click', function () {
-    openPin('do', function () {
-      hideSkipped = !hideSkipped;
-      try { localStorage.setItem(SKIP_KEY, hideSkipped ? '1' : '0'); } catch (e) {}
-      renderFood();
-    });
   });
 
   function doResetFood() {
