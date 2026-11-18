@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#3E2723">
+<title>Thumbs Up Friday has moved</title>
+<link rel="icon" type="image/png" href="/assets/2.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#3E2723}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+    background:#FFF8EC;
+    color:#3E2723;
+    line-height:1.5;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  .top{
+    background:#3E2723;
+    border-bottom:4px dashed #E8A33D;
+    color:#FFF8EC;
+    padding:calc(14px + env(safe-area-inset-top)) 18px 14px;
+    font-size:1.25rem;
+    font-weight:800;
+  }
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:18px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  main > * + *{margin-top:14px}
+  .card{
+    background:#FFFDF7;
+    border:2px solid #f0e6d2;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 10px 26px rgba(62,39,35,.08);
+  }
+  .hero{text-align:center;background:#FFF3DC;border-color:#E8A33D}
+  .hero .logo{font-size:3rem;line-height:1;margin-bottom:8px}
+  h1{font-size:1.6rem;line-height:1.2;margin-bottom:8px}
+  h2{font-size:1.1rem;margin-bottom:8px}
+  p{color:#5a4038}
+  .btn{
+    display:block;
+    width:100%;
+    font:inherit;
+    font-weight:800;
+    font-size:1.1rem;
+    text-align:center;
+    text-decoration:none;
+    padding:14px 20px;
+    border:0;
+    border-radius:14px;
+    background:#E8A33D;
+    color:#3E2723;
+    cursor:pointer;
+    margin-top:14px;
+  }
+  .btn:active{background:#d4922f}
+  .btn.alt{background:none;border:2px solid #E8A33D}
+  ol{padding-left:1.3rem;color:#5a4038}
+  li{margin-top:8px}
+  li strong{color:#3E2723}
+  .tag{
+    display:inline-block;
+    font-size:.75rem;
+    font-weight:800;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:#7E9E80;
+    margin-bottom:6px;
+  }
+  .url{
+    word-break:break-all;
+    font-size:.85rem;
+    background:#fff;
+    border:2px solid #e6d9c2;
+    border-radius:12px;
+    padding:10px 12px;
+    margin-top:12px;
+    color:#3E2723;
+  }
+  .small{font-size:.85rem;color:#8a7a6a}
+  .ok{color:#2E9E5B;font-weight:800;min-height:1.4em;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+
+<header class="top">👍 Thumbs Up Friday</header>
+
+<main>
+
+  <section class="card hero">
+    <div class="logo">📦</div>
+    <h1>The app has moved</h1>
+    <p>Thumbs Up Friday has a new home. The old app won’t be updated any more, so you need to reinstall it using the link below.</p>
+    <a class="btn" id="open" href="https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app">Open the new app</a>
+    <button class="btn alt" id="copy" type="button">Copy the link</button>
+    <div class="ok" id="ok" role="status"></div>
+    <div class="url" id="url">https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app</div>
+  </section>
+
+  <section class="card">
+    <span class="tag">Step 1</span>
+    <h2>Remove the old icon</h2>
+    <p>Press and hold the old <strong>TUF</strong> icon on your Home Screen, then choose <strong>Remove App</strong> (iPhone) or <strong>Uninstall</strong> (Android).</p>
+  </section>
+
+  <section class="card">
+    <span class="tag">Step 2</span>
+    <h2>Open the new link in your browser</h2>
+    <p>Tap <strong>Open the new app</strong> above. Use <strong>Safari</strong> on an iPhone or <strong>Chrome</strong> on Android. If you opened this page from WhatsApp, Teams or email, open the link in your browser first, or the install option won’t appear. If it asks you to sign in, use your school Google account.</p>
+  </section>
+
+  <section class="card">
+    <span class="tag">Step 3</span>
+    <h2>Add it to your Home Screen</h2>
+    <ol>
+      <li><strong>iPhone:</strong> tap the <strong>Share</strong> button (the square with an arrow), then <strong>Add to Home Screen</strong>.</li>
+      <li><strong>Android:</strong> tap the <strong>three dots</strong>, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+    </ol>
+  </section>
+
+  <p class="small" style="text-align:center">Stuck? Ask a leader and we’ll help you set it up.</p>
+
+</main>
+
+<script>
+(function () {
+  var LINK = 'https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app';
+  var ok = document.getElementById('ok');
+  function done(good) {
+    ok.textContent = good ? 'Link copied!' : 'Press and hold the link above to copy it.';
+  }
+  document.getElementById('copy').addEventListener('click', function () {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(LINK).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    var t = document.createElement('textarea');
+    t.value = LINK;
+    t.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(t);
+    t.select();
+    var good = false;
+    try { good = document.execCommand('copy'); } catch (e) {}
+    t.remove();
+    done(good);
+  });
+})();
+</script>
+
+</body>
+</html>

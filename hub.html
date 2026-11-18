@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>TUF Hub — Thumbs Up Friday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" type="image/png" href="assets/2.png">
+<style>
+  :root{ --go:#2E9E5B; --oven:#E07B22; }
+
+  html{height:100%;}
+  body.hub{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;-webkit-touch-callout:none;}
+  .nav-date{
+    color:var(--cream);
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(1rem,1.6vw,1.4rem);
+  }
+
+  .hub-main{
+    flex:none;
+    width:100%;
+    max-width:none;
+    margin:0;   /* no auto margins: they pushed the scaled page off-centre */
+    transform-origin:0 0;
+    padding:clamp(14px,2vw,28px);
+    display:grid;
+    grid-template-columns:repeat(12,1fr);
+    gap:clamp(14px,2vw,26px);
+    align-content:start;
+  }
+  .panel{
+    background:var(--card-bg);
+    border:2px solid #f0e6d2;
+    border-radius:22px;
+    padding:clamp(18px,2.2vw,32px);
+    box-shadow:0 12px 30px rgba(62,39,35,0.08);
+  }
+  .h-label{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(.8rem,1.1vw,1rem);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--sage);
+    margin-bottom:8px;
+  }
+
+  .clock-panel{grid-column:span 4;}
+  .tufs-panel{grid-column:span 2;}
+  .register-panel{grid-column:span 3;}
+
+  /* TUFs NEEDED */
+  .tufs-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:center;
+    text-align:center;
+    gap:6px;
+  }
+  .tufs-panel .h-label{margin-bottom:0;}
+  .tufs-input{
+    width:100%;
+    max-width:6ch;
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(2.4rem,5vw,4.5rem);
+    line-height:1.1;
+    text-align:right;
+    color:var(--choc);
+    background:transparent;
+    border:3px solid transparent;
+    border-radius:16px;
+    padding:2px 6px;
+    -moz-appearance:textfield;
+    appearance:textfield;
+    cursor:pointer;
+  }
+  .tufs-input::-webkit-outer-spin-button,
+  .tufs-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .tufs-input.editing{
+    background:#fff;
+    border-color:var(--mustard);
+    outline:none;
+    cursor:text;
+  }
+
+  .tufs-stats{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(.9rem,1.5vw,1.35rem);
+    line-height:1.25;
+    color:#5a4038;
+  }
+  .tufs-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    width:100%;
+  }
+  .tufs-row[hidden]{display:none;}
+  .tufs-row .h-label{text-align:left;font-size:clamp(1rem,1.6vw,1.5rem);line-height:1.1;}
+  .tufs-panel .reset{align-self:center;}
+  .tufs-left-num{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(2.4rem,5vw,4.5rem);
+    line-height:1.1;
+    text-align:right;
+    color:var(--choc);
+    padding:2px 9px;
+  }
+  .tufs-left-num.done{color:var(--go);}
+  .tufs-panel{transition:background .3s ease, border-color .3s ease;}
+  .tufs-panel.met{background:#EEF9F2;border-color:var(--go);}
+  .tufs-panel.under{background:#FFF3DC;border-color:var(--mustard);}
+
+  /* CLOCK */
+  .clock-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .clock{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(4.5rem,12vw,10rem);
+    line-height:1;
+    color:var(--choc);
+    font-variant-numeric:tabular-nums;
+  }
+  .clock small{
+    font-size:.32em;
+    color:var(--mustard);
+    margin-left:.12em;
+  }
+
+  .clock{transition:filter .3s ease;}
+  .clock-panel.time-hidden .clock{filter:blur(.22em);-webkit-filter:blur(.22em);user-select:none;pointer-events:none;}
+  .clock-toggle{margin-top:14px;}
+
+  /* REGISTER */
+  .register-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:clamp(12px,1.6vw,20px);
+  }
+  .reg-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(14px,2vw,26px);}
+  .canopy-panel .reg-text h2{font-size:clamp(1.2rem,2.2vw,2rem);}
+  .tick{
+    width:clamp(72px,9vw,120px);
+    height:clamp(72px,9vw,120px);
+    border-radius:50%;
+    border:6px solid #d9cdb5;
+    color:#d9cdb5;
+    display:grid;
+    place-items:center;
+    flex-shrink:0;
+    transition:background .3s ease, border-color .3s ease, color .3s ease, transform .3s ease;
+  }
+  .tick svg{width:62%;height:62%;}
+  .register-panel.done .tick{
+    background:var(--go);
+    border-color:var(--go);
+    color:#fff;
+    transform:scale(1.06);
+  }
+  .reg-text{text-align:left;}
+  .reg-text h2{
+    font-size:clamp(1.6rem,3vw,2.6rem);
+    line-height:1.1;
+    margin-bottom:4px;
+  }
+  .reg-status{
+    min-height:1.3em;   /* keeps the box the same size when empty */
+    font-size:clamp(1rem,1.7vw,1.5rem);
+    color:#8a7a6a;
+  }
+  .register-panel.done .reg-status{color:var(--go);font-weight:700;}
+  .register-panel.done{background:#EEF9F2;border-color:var(--go);}
+  .register-panel.done #reg-btn,
+  .register-panel.done #canopy-btn{background:var(--go);border-color:var(--go);color:#fff;}
+  .big-btn{font-size:clamp(1.1rem,1.9vw,1.7rem);padding:clamp(12px,1.4vw,18px) clamp(26px,3vw,44px);}
+  .reset{
+    background:none;
+    border:0;
+    color:#8a7a6a;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
+  /* NOW / NEXT */
+  .h-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:calc(var(--oven-fs,1) * clamp(1.6rem,3.4vw,3rem));
+    line-height:1.1;
+    margin-bottom:8px;
+    overflow-wrap:anywhere;
+  }
+  .h-meta{
+    color:#5a4038;
+    font-size:calc(var(--oven-fs,1) * clamp(1rem,1.7vw,1.5rem));
+  }
+  .now-panel.live{
+    background:#FFF3DC;
+    border-color:var(--mustard);
+  }
+
+  /* OVEN (inside Happening now) */
+  /* Fixed-size so oven rows appearing never change the page layout */
+  .now-panel{
+    grid-column:1 / -1;
+    height:clamp(190px,30vh,340px);
+    overflow:hidden;
+  }
+  .oven-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,calc(340px * var(--oven-fs,1))),1fr));
+    gap:6px 24px;
+  }
+  .oven-list:not(:empty){margin-bottom:8px;}
+  .oven-row{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:calc(var(--oven-fs,1) * clamp(1.2rem,2.3vw,2.1rem));
+    line-height:1.15;
+    color:var(--choc);
+    overflow-wrap:anywhere;
+  }
+  .oven-row .oven-time{
+    color:var(--oven);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+
+  /* FULL SCREEN BUTTON */
+  .dock{
+    position:fixed;
+    right:12px;
+    bottom:12px;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .fs-btn, .logout-btn{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:.95rem;
+    padding:8px 16px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.6);
+    background:rgba(62,39,35,.78);
+    color:#fff;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease;
+  }
+  .fs-btn:hover, .fs-btn:focus-visible, .logout-btn:hover, .logout-btn:focus-visible{opacity:1;}
+
+  /* RETURN-TO-FULL-SCREEN COVER (shown if full screen is left without the code) */
+  .fs-return{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+    animation:fsflash 0.9s steps(1) infinite;
+  }
+  .fs-return[hidden]{display:none;}
+  @keyframes fsflash{
+    0%{background:#d62828;}
+    50%{background:#ffd60a;}
+  }
+  .fs-card{
+    background:#fff;
+    color:#3E2723;
+    border:10px solid #d62828;
+    border-radius:28px;
+    padding:clamp(18px,3vw,40px);
+    max-width:900px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .fs-hand{
+    font-size:clamp(6rem,22vw,14rem);
+    line-height:1;
+    animation:fswave .6s ease-in-out infinite alternate;
+  }
+  @keyframes fswave{
+    from{transform:rotate(-10deg) scale(1);}
+    to{transform:rotate(10deg) scale(1.08);}
+  }
+  .fs-card h1{
+    font-size:clamp(2rem,6vw,4.2rem);
+    line-height:1.05;
+    color:#d62828;
+    margin:8px 0 14px;
+    text-transform:uppercase;
+  }
+  .fs-card p{
+    font-size:clamp(1.2rem,2.8vw,2rem);
+    font-weight:600;
+    margin:6px 0;
+  }
+  .fs-card .fs-tap{
+    margin-top:16px;
+    font-size:clamp(1rem,2vw,1.4rem);
+    color:#8a7a6a;
+    font-weight:500;
+  }
+
+  /* WELCOME MESSAGE (shown for a few seconds after logging in) */
+  .welcome{
+    position:fixed;
+    inset:0;
+    z-index:250;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(62,39,35,.7);
+    cursor:default;
+    font-family:'Fredoka',sans-serif;
+  }
+  .welcome[hidden]{display:none;}
+  .welcome-card{
+    background:var(--card-bg,#FFFDF7);
+    border:3px solid var(--mustard,#E8A33D);
+    border-radius:28px;
+    padding:clamp(28px,5vw,64px) clamp(32px,6vw,96px);
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    max-width:min(96vw,1400px);
+  }
+  .welcome h1{
+    white-space:nowrap;
+    font-size:clamp(1.6rem,5vw,4.5rem);
+    line-height:1.05;
+    color:var(--choc,#3E2723);
+    margin:0 0 10px;
+  }
+  .welcome p{
+    font-size:clamp(1.1rem,2.6vw,2rem);
+    font-weight:500;
+    color:#5a4038;
+    margin:0;
+  }
+  .welcome-warn{
+    margin:24px auto 0;
+    max-width:44em;
+    background:#FFF3E6;
+    border:2px solid #d62828;
+    border-radius:18px;
+    padding:16px 22px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-family:'Inter',sans-serif;
+    font-size:clamp(1rem,2vw,1.5rem);
+    line-height:1.35;
+    color:var(--choc,#3E2723);
+  }
+  .welcome-warn strong{
+    font-family:'Fredoka',sans-serif;
+    font-size:1.25em;
+    color:#d62828;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .welcome-ask{
+    margin-top:22px !important;
+    font-weight:600 !important;
+    color:var(--choc,#3E2723) !important;
+  }
+  .welcome-btns{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:14px;
+    margin-top:16px;
+  }
+  .welcome button.btn{
+    cursor:pointer;
+    font-size:clamp(1rem,2vw,1.4rem);
+  }
+  .welcome button.btn-primary{border:0;}
+  .welcome button.btn-outline{background:transparent;}
+  .welcome button.btn-outline:hover{background:var(--choc,#3E2723);color:var(--cream,#FFF8EC);}
+  .welcome.show{animation:welcomeFade .4s ease forwards;}
+  .welcome.show .welcome-card{animation:welcomePop .5s ease-out;}
+  @keyframes welcomeFade{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+  @keyframes welcomePop{
+    from{transform:scale(.9);}
+    to{transform:scale(1);}
+  }
+
+  /* ENTRY GATE (code needed to open the page) */
+  .gate{
+    position:fixed;
+    inset:0;
+    z-index:300;
+    background:#EDE2CB;
+    display:grid;
+    grid-template-columns:clamp(300px,21%,420px) 1fr;
+  }
+  .gate[hidden]{display:none;}
+  .gate-side{
+    background:#F7F0E2;
+    box-shadow:0 0 24px rgba(62,39,35,.08);
+    position:relative;
+    z-index:1;
+    padding:clamp(28px,6vh,56px) clamp(24px,3.4vw,64px);
+    overflow:auto;
+  }
+  .gate-brand{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.4rem,1.9vw,2rem);
+    color:var(--choc,#3E2723);
+    margin:8px 0 clamp(32px,8vh,64px);
+    white-space:nowrap;
+  }
+  .gate-brand span{font-weight:500;}
+  .gate-brand i{
+    width:1.3em;
+    height:1.3em;
+    background:var(--mustard,#E8A33D);
+    -webkit-mask:url(assets/2.png) center/contain no-repeat;
+    mask:url(assets/2.png) center/contain no-repeat;
+  }
+  .gate-side .pin-box{
+    width:100%;
+    padding:0;
+    background:transparent;
+    box-shadow:none;
+    text-align:left;
+  }
+  .gate-side .pin-title{
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:.8rem;
+    color:#a87a00;
+    margin-bottom:0;
+  }
+  .gate-field{
+    border-bottom:2px solid var(--mustard,#E8A33D);
+    padding:14px 0 12px;
+  }
+  .gate-side .pin-dots{justify-content:flex-start;margin-bottom:0;gap:12px;min-height:18px;}
+  .gate-side .btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    text-decoration:none;
+    margin-top:32px;
+  }
+  .gate-side button.btn{border:0;cursor:pointer;}
+  .gate-note{
+    margin-top:36px;
+    background:#EADFC8;
+    border-radius:12px;
+    padding:14px 16px;
+    display:flex;
+    gap:12px;
+    font-size:.8rem;
+    line-height:1.4;
+    color:#5a4038;
+  }
+  .gate-note .ico{
+    flex:none;
+    width:20px;
+    height:20px;
+    border:1.5px solid var(--mustard,#E8A33D);
+    border-radius:50%;
+    color:#a87a00;
+    font-weight:700;
+    font-size:.75rem;
+    display:grid;
+    place-items:center;
+  }
+  .gate-note a{color:#a87a00;overflow-wrap:anywhere;}
+  .gate-main{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(40px,12vh,140px);
+    padding:24px;
+    text-align:center;
+    position:relative;
+  }
+  .gate-credit{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:clamp(14px,3vh,28px);
+    text-align:center;
+    font-size:clamp(.8rem,1vw,.95rem);
+    color:#7a6a5a;
+  }
+  .gate-credit a{color:inherit;}
+  .gate-logo{
+    width:clamp(140px,17vw,300px);
+    aspect-ratio:1;
+    background:var(--mustard,#E8A33D);
+    -webkit-mask:url(assets/2.png) center/contain no-repeat;
+    mask:url(assets/2.png) center/contain no-repeat;
+  }
+  .gate-main h1{
+    font-family:'Fredoka',sans-serif;
+    font-weight:500;
+    font-size:clamp(1.6rem,2.6vw,2.6rem);
+    line-height:1.15;
+    color:var(--choc,#3E2723);
+    margin:0;
+  }
+  @media (max-width:800px){
+    .gate{grid-template-columns:1fr;}
+    .gate-main{display:none;}
+  }
+
+  /* Gentle "tap to return" cover (used after printing, not a warning) */
+  .fs-soft{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    background:rgba(62,39,35,.96);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+  }
+  .fs-soft[hidden]{display:none;}
+  .fs-soft b{font-size:clamp(2rem,6vw,4rem);}
+  .fs-soft span{font-size:clamp(1.1rem,2.4vw,1.8rem);opacity:.85;}
+
+  /* EXIT CODE KEYPAD */
+  .pin-overlay{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(62,39,35,.82);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .pin-overlay[hidden]{display:none;}
+  .pin-box{
+    background:var(--card-bg,#fff);
+    border-radius:22px;
+    padding:clamp(18px,3vh,32px) clamp(20px,3vw,36px);
+    text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    width:min(92vw,340px);
+  }
+  .pin-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:1.4rem;
+    color:var(--choc);
+    margin-bottom:12px;
+  }
+  .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:16px;}
+  .pin-dots span{
+    width:18px;height:18px;border-radius:50%;
+    border:3px solid #d9cdb5;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .pin-dots span.on{background:var(--choc);border-color:var(--choc);}
+  .pin-box.bad{animation:pinshake .35s;}
+  .pin-box.bad .pin-dots span{border-color:#c0392b;background:#c0392b;}
+  @keyframes pinshake{
+    0%,100%{transform:translateX(0);}
+    20%,60%{transform:translateX(-10px);}
+    40%,80%{transform:translateX(10px);}
+  }
+  .pin-keys{display:flex;justify-content:center;gap:10px;}
+  .pin-keys button{padding-left:28px !important;padding-right:28px !important;}
+  .pin-keys button{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.5rem;
+    padding:14px 0;
+    border-radius:14px;
+    border:2px solid #d9cdb5;
+    background:#fff;
+    color:var(--choc);
+    cursor:pointer;
+  }
+  .pin-keys button:active{background:var(--mustard);border-color:var(--mustard);}
+  .pin-keys button.small{font-size:.95rem;color:#8a7a6a;}
+
+  /* FOOD */
+  .food-panel{grid-column:1 / -1;}
+  .food-head{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .food-head .h-label{margin-bottom:0;}
+  .food-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .food-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:14px;
+  }
+  .food{
+    background:#fff;
+    border:2px solid #f0e6d2;
+    border-radius:18px;
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:border-color .3s ease, background .3s ease, opacity .3s ease;
+  }
+  .food-name{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:clamp(1.2rem,1.9vw,1.7rem);
+    line-height:1.1;
+    color:var(--choc);
+  }
+  .food-name small{
+    font-size:.55em;
+    font-weight:600;
+    color:var(--sage);
+    margin-left:.4em;
+  }
+  .food-status{
+    font-size:clamp(.95rem,1.3vw,1.15rem);
+    color:#8a7a6a;
+    min-height:1.4em;
+  }
+  .food.s-started{border-color:var(--mustard);}
+  .food.s-started .food-status{color:#a87a00;font-weight:700;}
+  .food.s-oven{border-color:var(--oven);background:#FFF3E6;}
+  .food.s-oven .food-status{color:var(--oven);font-weight:700;}
+  .food.s-out{border-color:#5B7FA6;background:#EEF3F9;}
+  .food.s-out .food-status{color:#3F628A;font-weight:700;}
+  .food.s-ready{border-color:var(--go);background:#EEF9F2;}
+  .food.s-ready .food-status{color:var(--go);font-weight:700;}
+  .food.skipped{opacity:.55;background:#f6f1e6;border-style:dashed;}
+  .food.skipped .food-status{font-weight:700;color:#8a7a6a;}
+
+  .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .step{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:clamp(.85rem,1.1vw,1rem);
+    line-height:1.15;
+    padding:12px 6px;
+    border-radius:12px;
+    border:2px solid #d9cdb5;
+    background:#fff;
+    color:#5a4038;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    transition:background .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .step:hover:not(:disabled){border-color:var(--choc);}
+  .step .st{font-size:.8em;font-weight:500;min-height:1.1em;}
+  .step.on{color:#fff;}
+  .step[data-step="started"].on{background:var(--mustard);border-color:var(--mustard);}
+  .step[data-step="oven"].on{background:var(--oven);border-color:var(--oven);}
+  .step[data-step="out"].on{background:#5B7FA6;border-color:#5B7FA6;}
+  .step[data-step="ready"].on{background:var(--go);border-color:var(--go);}
+  .step:disabled{cursor:not-allowed;opacity:.6;}
+  .skip-btn{
+    align-self:flex-start;
+    background:none;
+    border:0;
+    padding:0;
+    color:#8a7a6a;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
+  /* In full screen: hide the food buttons (print, add food, hide/show not making) and the links on each card (add batch, not making this week, remove) */
+  html.is-fs .food-actions,
+  html.is-fs .batch-btn,
+  html.is-fs .skip-btn,
+  html.is-fs .remove-btn,
+  html.is-fs #tufs-edit{display:none !important;}
+  /* Foods marked "Not making this week" are hidden in full screen and shown when not in full screen */
+  html.is-fs .food.skipped{display:none;}
+
+  /* HIDE DASHBOARD BUTTON (bottom left) + LOCK SCREEN */
+  .dock-left{
+    position:fixed;
+    left:12px;
+    bottom:12px;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .hide-btn, .reset-all-btn{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:.95rem;
+    padding:8px 16px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.6);
+    background:rgba(62,39,35,.78);
+    color:#fff;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease;
+  }
+  .hide-btn:hover, .hide-btn:focus-visible, .reset-all-btn:hover, .reset-all-btn:focus-visible{opacity:1;}
+  .lock-screen{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Fredoka',sans-serif;
+    color:var(--choc);
+    background:rgba(255,248,234,.35);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+  }
+  .lock-screen[hidden]{display:none;}
+  .lock-screen b{font-size:clamp(2rem,6vw,4.2rem);line-height:1.1;text-shadow:0 2px 12px rgba(255,255,255,.9);}
+  .lock-screen span{font-size:clamp(1.1rem,2.4vw,1.8rem);font-weight:600;text-shadow:0 2px 12px rgba(255,255,255,.9);}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .lock-screen{background:rgba(255,248,234,.97);}
+  }
+
+  /* FOOTER (text comes from content/site.json, same as the rest of the site) */
+  .hub-footer{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:40;
+    background:var(--cream,#fff8ea);
+    text-align:center;
+    padding:8px 12px;
+    font-size:clamp(.7rem,.9vw,.85rem);
+    color:#8a7a6a;
+  }
+
+  /* ADD FOOD (pop-up) */
+  .add-overlay{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:rgba(62,39,35,.82);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .add-overlay[hidden]{display:none;}
+  .add-input{
+    width:100%;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:1.3rem;
+    padding:12px 14px;
+    border-radius:14px;
+    border:2px solid var(--mustard);
+    margin-bottom:16px;
+    color:var(--choc);
+    background:#fff;
+    text-align:center;
+  }
+  .add-input:focus{outline:none;}
+  .remove-btn{
+    align-self:flex-start;
+    background:none;
+    border:0;
+    padding:0;
+    color:#c0392b;
+    text-decoration:underline;
+    cursor:pointer;
+    font:inherit;
+    font-size:.9rem;
+  }
+
+  /* SCHEDULE */
+  .schedule-panel{grid-column:1 / -1;}
+  .sched{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:12px;
+  }
+  .ev{
+    display:flex;
+    gap:14px;
+    align-items:baseline;
+    padding:12px 16px;
+    border-radius:14px;
+    background:#fff;
+    border:2px solid #f0e6d2;
+    font-size:clamp(1rem,1.5vw,1.3rem);
+  }
+  .ev .t{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    color:var(--choc);
+    min-width:3.4em;
+  }
+  .ev.past{opacity:.45;}
+  .ev.now{background:var(--mustard);border-color:var(--mustard);}
+  .ev.next{border-color:var(--mustard);}
+  .empty{color:#8a7a6a;font-size:1.1rem;}
+
+  /* PRINT REPORT (hidden on screen) */
+  #print-report{display:none;}
+
+  @media (max-width:800px){
+    .hub-main{grid-template-columns:1fr;}
+    .clock-panel,.tufs-panel,.register-panel{grid-column:auto;}
+    .reg-row{flex-direction:column;text-align:center;}
+    .reg-text{text-align:center;}
+  }
+
+  @media print{
+    @page{margin:16mm;}
+    body.hub > nav, body.hub > .hub-main, body.hub > footer, .welcome, .dock, .dock-left, .fs-btn, .hide-btn, .lock-screen, .pin-overlay, .add-overlay, .gate, .fs-return, .fs-soft{display:none !important;}
+    body.hub{display:block;height:auto;min-height:0;overflow:visible;background:#fff !important;}
+    #print-report{
+      display:block;
+      font-family:'Inter',Arial,sans-serif;
+      color:#000;
+    }
+    #print-report h1{
+      font-family:'Fredoka',Arial,sans-serif;
+      font-size:22pt;
+      margin:0 0 4px;
+    }
+    #print-report .sub{font-size:11pt;color:#444;margin-bottom:18px;}
+    #print-report table{width:100%;border-collapse:collapse;font-size:11pt;}
+    #print-report th, #print-report td{
+      border:1px solid #999;
+      padding:8px 10px;
+      text-align:left;
+    }
+    #print-report th{background:#eee;}
+    #print-report tr.skip td{color:#777;font-style:italic;}
+    #print-report .foot{margin-top:16px;font-size:9pt;color:#666;}
+  }
+</style>
+</head>
+<body class="hub">
+
+<nav>
+  <div class="brand">👍 Thumbs Up Friday — Hub</div>
+  <div class="nav-date" id="date"></div>
+</nav>
+
+<main class="hub-main">
+
+  <section class="panel clock-panel" id="clock-panel">
+    <div class="clock" id="clock">--:--</div>
+    <button class="reset clock-toggle" id="clock-toggle" type="button">Hide time</button>
+  </section>
+
+  <section class="panel tufs-panel" id="tufs-panel">
+    <div class="tufs-row">
+      <div class="h-label">TUFs Needed</div>
+      <input class="tufs-input" id="tufs-input" type="number" inputmode="numeric" min="0" step="1" placeholder="–" readonly aria-label="TUFs needed">
+    </div>
+    <div class="tufs-row" id="tufs-left-row" hidden>
+      <div class="h-label">Still needed</div>
+      <div class="tufs-left-num" id="tufs-left-num">0</div>
+    </div>
+    <div class="tufs-stats">
+      <div class="tufs-line" id="tufs-ready-line">Ready: 0</div>
+    </div>
+    <button class="reset" id="tufs-edit" type="button">Edit</button>
+  </section>
+
+  <section class="panel register-panel" id="register-panel">
+    <div class="reg-row">
+      <div class="tick" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div class="reg-text">
+        <h2>Register</h2>
+        <div class="reg-status" id="reg-status"></div>
+      </div>
+    </div>
+    <a class="btn btn-primary big-btn" id="reg-btn" href="#">Completed?</a>
+    <button class="reset" id="reg-reset" type="button" hidden>Reset tick</button>
+  </section>
+
+  <section class="panel register-panel canopy-panel" id="canopy-panel">
+    <div class="reg-row">
+      <div class="tick" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div class="reg-text">
+        <h2>List For Canopy</h2>
+        <div class="reg-status" id="canopy-status"></div>
+      </div>
+    </div>
+    <a class="btn btn-primary big-btn" id="canopy-btn" href="#">Completed?</a>
+    <button class="reset" id="canopy-reset" type="button" hidden>Reset tick</button>
+  </section>
+
+  <section class="panel now-panel" id="now-panel">
+    <div class="h-label">Happening now</div>
+    <div class="oven-list" id="oven-list"></div>
+    <div class="h-title" id="now-title">—</div>
+    <div class="h-meta" id="now-meta"></div>
+  </section>
+
+  <section class="panel food-panel">
+    <div class="food-head">
+      <div class="h-label">Food</div>
+      <div class="food-actions">
+        <button class="btn btn-primary" id="add-food-btn" type="button">+ Add food</button>
+        <button class="btn btn-primary" id="print-btn" type="button">Print week report (PDF)</button>
+      </div>
+    </div>
+    <div class="food-grid" id="food-grid"></div>
+  </section>
+
+</main>
+
+<footer class="hub-footer" id="hub-footer">Cottesloe School — Thumbs Up Friday | Website By Charlie Ivin portfolio.charlieivin.co.uk</footer>
+
+<div class="dock-left">
+  <button class="hide-btn" id="hide-btn" type="button" aria-label="Hide dashboard">Hide dashboard</button>
+  <button class="reset-all-btn" id="reset-all-btn" type="button" aria-label="Reset all">Reset all</button>
+</div>
+
+<div class="lock-screen" id="lock-screen" hidden>
+  <b>Thumbs Up Friday Dashboard Locked</b>
+  <span>Enter the pin to continue</span>
+</div>
+
+<div class="dock">
+  <button class="fs-btn" id="fs-btn" type="button" aria-label="Toggle full screen">⛶ Full screen</button>
+  <button class="logout-btn" id="logout-btn" type="button" aria-label="Log out">Log out</button>
+</div>
+
+<div class="pin-overlay" id="pin-overlay" hidden>
+  <div class="pin-box" id="pin-box" role="dialog" aria-label="Enter code">
+    <div class="pin-title">Type the code to exit</div>
+    <div class="pin-dots" id="pin-dots"></div>
+    <div class="pin-keys" id="pin-keys"></div>
+  </div>
+</div>
+
+<div class="add-overlay" id="add-overlay" hidden>
+  <div class="pin-box" id="add-box" role="dialog" aria-label="Add food">
+    <div class="pin-title">Add food for this week</div>
+    <input class="add-input" id="add-input" type="text" maxlength="30" placeholder="e.g. Flapjacks" autocomplete="off">
+    <div class="pin-keys">
+      <button type="button" class="small" id="add-cancel">Cancel</button>
+      <button type="button" id="add-ok">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="add-overlay" id="qty-overlay" hidden>
+  <div class="pin-box" id="qty-box" role="dialog" aria-label="How many are ready">
+    <div class="pin-title" id="qty-title">How many are ready for serving?</div>
+    <input class="add-input" id="qty-input" type="number" inputmode="numeric" min="1" step="1" placeholder="Number" autocomplete="off">
+    <div class="pin-keys">
+      <button type="button" class="small" id="qty-cancel">Cancel</button>
+      <button type="button" id="qty-ok">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="welcome" id="welcome" hidden>
+  <div class="welcome-card">
+    <h1 id="welcome-title">Welcome</h1>
+    <p id="welcome-line">Welcome to the Thumbs Up Friday Managing Hub</p>
+    <div class="welcome-warn">
+      <strong>Trained TUF Staff only</strong>
+      <span>If you have not been trained to use the Managing Hub, please do not use it. Please ask a trained member of TUF Staff to help you instead.</span>
+    </div>
+    <p class="welcome-ask" id="welcome-ask">Please confirm who you are.</p>
+    <div class="welcome-btns">
+      <button type="button" class="btn btn-primary" id="welcome-ok">Yes, that is me</button>
+      <button type="button" class="btn btn-outline" id="welcome-no">No, that is not me</button>
+    </div>
+  </div>
+</div>
+
+<div class="gate" id="gate">
+  <aside class="gate-side">
+    <div class="gate-brand"><i aria-hidden="true"></i>Thumbs Up Friday <span>Hub</span></div>
+    <div class="pin-box" id="gate-box" role="dialog" aria-label="Enter code to open">
+      <div class="pin-title">Type the code to open</div>
+      <div class="gate-field"><div class="pin-dots" id="gate-dots"></div></div>
+    </div>
+    <button type="button" class="btn btn-primary" id="gate-login">Login</button>
+    <div class="gate-note">
+      <span class="ico">i</span>
+      <span>Type the code on the keyboard. The main Thumbs Up Friday site is: <a href="/">thumbs-up-friday.charlieivin.co.uk</a></span>
+    </div>
+  </aside>
+  <div class="gate-main">
+    <div class="gate-logo" role="img" aria-label="Thumbs up"></div>
+    <h1>The Cottesloe School — Thumbs Up Friday Managing Hub</h1>
+    <div class="gate-credit">Website By Charlie Ivin <a href="https://portfolio.charlieivin.co.uk/" target="_blank" rel="noopener">portfolio.charlieivin.co.uk</a></div>
+  </div>
+</div>
+
+<div class="fs-soft" id="fs-soft" hidden>
+  <b>⛶ Tap to return to full screen</b>
+  <span>Printing finished</span>
+</div>
+
+<div class="fs-return" id="fs-return" hidden>
+  <div class="fs-card">
+    <div class="fs-hand">✋</div>
+    <h1>⚠️ You should not have exited! ⚠️</h1>
+    <p>Leave this screen in full screen.</p>
+    <p>If you need a computer, use a different PC. Do not use this one.</p>
+    <div class="fs-tap">Tap anywhere to put it back in full screen</div>
+  </div>
+</div>
+
+<div id="print-report"></div>
+
+<script>
+(function () {
+  // Used only if content/hub.json can't be loaded (e.g. the screen is offline).
+  var DEFAULT_REGISTER_URL = 'https://docs.google.com/spreadsheets/d/1R7_71nVOLdocqbKiXY1IwyIRn_LudvZw7CSWH6aljp4/edit?usp=sharing';
+  var STORAGE_KEY = 'tuf-register-v1';
+  var FOOD_KEY = 'tuf-food-v1';
+
+  var FOODS = [
+    { id: 'brownies',     name: 'Brownies',      note: 'gluten free' },
+    { id: 'chelsea',      name: 'Chelsea buns' },
+    { id: 'cupcakes',     name: 'Cupcakes' },
+    { id: 'cookies',      name: 'Cookies' },
+    { id: 'sausage',      name: 'Sausage rolls' },
+    { id: 'cheese',       name: 'Cheese twists' },
+    { id: 'cakepops',     name: 'Cake pops' }
+  ];
+  var STEPS = [
+    { id: 'started', label: 'Starting',          done: 'Started' },
+    { id: 'oven',    label: 'In oven',           done: 'In oven since' },
+    { id: 'out',     label: 'Out of oven',       done: 'Out of oven at' },
+    { id: 'ready',   label: 'Ready for serving', done: 'Ready for serving at' }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+
+  // ---------- cookies (with localStorage as a backup) ----------
+  function setCookie(name, value, days) {
+    try {
+      document.cookie = name + '=' + encodeURIComponent(value) +
+        '; max-age=' + Math.round(days * 86400) + '; path=/; SameSite=Lax';
+    } catch (e) {}
+  }
+  function getCookie(name) {
+    try {
+      var parts = document.cookie ? document.cookie.split('; ') : [];
+      for (var i = 0; i < parts.length; i++) {
+        var eq = parts[i].indexOf('=');
+        if (parts[i].slice(0, eq) === name) return decodeURIComponent(parts[i].slice(eq + 1));
+      }
+    } catch (e) {}
+    return null;
+  }
+  function cookieNames(prefix) {
+    var out = [];
+    try {
+      (document.cookie ? document.cookie.split('; ') : []).forEach(function (p) {
+        var n = p.slice(0, p.indexOf('='));
+        if (n.indexOf(prefix) === 0) out.push(n);
+      });
+    } catch (e) {}
+    return out;
+  }
+  function delCookie(name) {
+    try { document.cookie = name + '=; max-age=0; path=/; SameSite=Lax'; } catch (e) {}
+  }
+
+  // ---------- time helpers ----------
+  function toSec(t) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '').trim());
+    if (!m) return null;
+    var h = +m[1], mi = +m[2];
+    if (h > 23 || mi > 59) return null;
+    return h * 3600 + mi * 60;
+  }
+  function fmt(sec) {
+    sec = sec % 86400;
+    return pad(Math.floor(sec / 3600)) + ':' + pad(Math.floor((sec % 3600) / 60));
+  }
+  function untilText(sec) {
+    if (sec < 600) return 'in ' + Math.floor(sec / 60) + ':' + pad(sec % 60);
+    var mins = Math.ceil(sec / 60);
+    if (mins < 60) return 'in ' + mins + ' min';
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return 'in ' + h + ' h' + (m ? ' ' + m + ' min' : '');
+  }
+  function todayStr(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function nowHM() {
+    var d = new Date();
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  // Monday of the current week, as YYYY-MM-DD
+  function weekStart(d) {
+    d = d ? new Date(d.getTime()) : new Date();
+    d.setHours(12, 0, 0, 0);
+    var day = (d.getDay() + 6) % 7; // Mon=0 ... Sun=6
+    d.setDate(d.getDate() - day);
+    return todayStr(d);
+  }
+
+  // ---------- oven timers (shown in "Happening now") ----------
+  var lastOvenKey = '';
+
+  // Size everything in the Happening now panel (oven lines, title, "until")
+  // to fill the panel as fully as possible: it grows when there is room and
+  // shrinks (flowing into more columns) as more foods go in the oven.
+  function fitOven() {
+    var panel = $('now-panel');
+    var hasOven = $('oven-list').children.length > 0;
+    var lo = 0.3, hi = hasOven ? 3.5 : 1.6;
+    function fits(v) {
+      panel.style.setProperty('--oven-fs', v.toFixed(3));
+      return panel.scrollHeight <= panel.clientHeight + 1;
+    }
+    if (fits(hi)) return;                 // already fills the panel at the biggest size
+    for (var i = 0; i < 14; i++) {
+      var mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid; else hi = mid;
+    }
+    fits(lo);
+  }
+
+  function elapsedText(secs) {
+    var h = Math.floor(secs / 3600);
+    var m = Math.floor((secs % 3600) / 60);
+    var s = secs % 60;
+    return (h ? h + ':' + pad(m) : String(m)) + ':' + pad(s);
+  }
+
+  // Foods that are in the oven (not yet ready, not skipped), with seconds elapsed
+  function ovenItems() {
+    var items = weekItems();
+    var out = [];
+    allFoods().forEach(function (f) {
+      var it = items[f.id];
+      if (!it || !it.oven || it.out || it.ready || it.skip) return;
+      var secs;
+      if (it.ovenTs) {
+        secs = Math.floor((Date.now() - it.ovenTs) / 1000);
+      } else {
+        var d = new Date();
+        secs = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds() - (toSec(it.oven) || 0);
+      }
+      out.push({ name: f.name, secs: Math.max(0, secs) });
+    });
+    return out;
+  }
+
+  // ---------- events ----------
+  // An event is "on" from its start until its end time. If no end time is
+  // given it runs until the next event starts; the last event with no end
+  // time is treated as lasting 30 minutes.
+  var events = [];
+  var rows = [];
+
+  function prepareEvents(list) {
+    var evs = (list || []).map(function (e) {
+      return { title: e.title || '', time: e.time, start: toSec(e.time), endRaw: toSec(e.end) };
+    }).filter(function (e) { return e.start !== null && e.title; })
+      .sort(function (a, b) { return a.start - b.start; });
+    evs.forEach(function (e, i) {
+      var nextStart = evs[i + 1] ? evs[i + 1].start : null;
+      if (e.endRaw !== null && e.endRaw > e.start) e.end = e.endRaw;
+      else if (nextStart !== null && nextStart > e.start) e.end = nextStart;
+      else e.end = e.start + 1800;
+    });
+    return evs;
+  }
+
+  function buildSchedule() {
+    var el = $('sched');
+    rows = [];
+    if (!el) return; // schedule panel removed from the page
+    el.textContent = '';
+    if (!events.length) {
+      var p = document.createElement('div');
+      p.className = 'empty';
+      p.textContent = 'No events added yet.';
+      el.appendChild(p);
+      return;
+    }
+    events.forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'ev';
+      var t = document.createElement('span');
+      t.className = 't';
+      t.textContent = fmt(e.start);
+      var n = document.createElement('span');
+      n.textContent = e.title;
+      row.appendChild(t);
+      row.appendChild(n);
+      el.appendChild(row);
+      rows.push(row);
+    });
+  }
+
+  function renderEvents(nowSec) {
+    var cur = null, nxt = null;
+    events.forEach(function (e) { if (nowSec >= e.start && nowSec < e.end) cur = e; });
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].start > nowSec) { nxt = events[i]; break; }
+    }
+
+    // Happening now
+    var nowPanel = $('now-panel');
+    var ovens = ovenItems();
+    var ovenEl = $('oven-list');
+    ovenEl.textContent = '';
+    ovens.forEach(function (o) {
+      var row = document.createElement('div');
+      row.className = 'oven-row';
+      row.appendChild(document.createTextNode('🔥 ' + o.name + ' in oven for '));
+      var tm = document.createElement('span');
+      tm.className = 'oven-time';
+      tm.textContent = elapsedText(o.secs);
+      row.appendChild(tm);
+      ovenEl.appendChild(row);
+    });
+
+    var titleEl = $('now-title');
+    nowPanel.classList.toggle('live', !!(cur || ovens.length));
+    if (cur) {
+      titleEl.style.display = '';
+      titleEl.textContent = cur.title;
+      $('now-meta').textContent = 'Until ' + fmt(cur.end);
+    } else if (ovens.length) {
+      titleEl.style.display = 'none';
+      $('now-meta').textContent = '';
+    } else {
+      titleEl.style.display = '';
+      titleEl.textContent = 'Nothing right now';
+      $('now-meta').textContent = '';
+    }
+
+    // Re-fit the oven lines only when something that affects their size changes
+    var ovenKey = ovens.length + '|' + ovenEl.textContent.length + '|' +
+      window.innerWidth + 'x' + window.innerHeight + '|' + (cur ? cur.title : '');
+    if (ovenKey !== lastOvenKey) { lastOvenKey = ovenKey; fitOven(); }
+
+    // Schedule highlights
+    events.forEach(function (e, i) {
+      var cls = 'ev';
+      if (nowSec >= e.end) cls += ' past';
+      else if (nowSec >= e.start) cls += ' now';
+      else if (e === nxt) cls += ' next';
+      if (rows[i] && rows[i].className !== cls) rows[i].className = cls;
+    });
+  }
+
+  // ---------- hide / show the big time (needs the code) ----------
+  var TIME_KEY = 'tuf-time-hidden-v1';
+  var timeHidden = false;
+  try { timeHidden = localStorage.getItem(TIME_KEY) === '1'; } catch (e) {}
+  function renderTimeToggle() {
+    $('clock-panel').classList.toggle('time-hidden', timeHidden);
+    $('clock-toggle').textContent = timeHidden ? 'Show time' : 'Hide time';
+    scheduleFit();
+  }
+  $('clock-toggle').addEventListener('click', function () {
+    openPin('do', function () {
+      timeHidden = !timeHidden;
+      try { localStorage.setItem(TIME_KEY, timeHidden ? '1' : '0'); } catch (e) {}
+      renderTimeToggle();
+    });
+  });
+
+  // ---------- register tick ----------
+  var registerUrl = DEFAULT_REGISTER_URL;
+  var regBtn = $('reg-btn');
+  regBtn.href = '#';
+
+  function loadReg() {
+    var raw = getCookie(STORAGE_KEY);
+    if (raw === null) {
+      try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    }
+    try {
+      var v = JSON.parse(raw);
+      if (v && v.date === todayStr()) return v;
+    } catch (e) {}
+    return null;
+  }
+  function saveReg(v) {
+    if (v) setCookie(STORAGE_KEY, JSON.stringify(v), 2);
+    else delCookie(STORAGE_KEY);
+    try {
+      if (v) localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  var reg = loadReg();
+
+  function renderReg() {
+    var panel = $('register-panel');
+    if (reg) {
+      panel.classList.add('done');
+      $('reg-status').textContent = 'Completed at ' + reg.time;
+      regBtn.textContent = 'Completed ✓';
+      regBtn.removeAttribute('href');       // no longer opens the sheet
+      regBtn.style.pointerEvents = 'none';
+      $('reg-reset').hidden = false;
+    } else {
+      panel.classList.remove('done');
+      $('reg-status').textContent = '';
+      regBtn.textContent = 'Completed?';
+      regBtn.href = '#';
+      regBtn.style.pointerEvents = '';
+      $('reg-reset').hidden = true;
+    }
+  }
+
+  // Taking the register needs the code, so only you can do it.
+  regBtn.addEventListener('click', function (e) {
+    e.preventDefault();                    // never open the sheet until the code is right
+    if (reg) return;
+    openPin('reg', function () {
+      var d = new Date();
+      reg = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+      saveReg(reg);
+      renderReg();
+    });
+  });
+  function doResetReg() {
+    reg = null;
+    saveReg(null);
+    renderReg();
+  }
+  $('reg-reset').addEventListener('click', function () { openPin('reset-reg'); });
+
+  // ---------- list for canopy tick (same code, resets each day) ----------
+  var CANOPY_KEY = 'tuf-canopy-v1';
+  var canopyBtn = $('canopy-btn');
+  canopyBtn.href = '#';
+
+  function loadCanopy() {
+    var raw = getCookie(CANOPY_KEY);
+    if (raw === null) {
+      try { raw = localStorage.getItem(CANOPY_KEY); } catch (e) {}
+    }
+    try {
+      var v = JSON.parse(raw);
+      if (v && v.date === todayStr()) return v;
+    } catch (e) {}
+    return null;
+  }
+  function saveCanopy(v) {
+    if (v) setCookie(CANOPY_KEY, JSON.stringify(v), 2);
+    else delCookie(CANOPY_KEY);
+    try {
+      if (v) localStorage.setItem(CANOPY_KEY, JSON.stringify(v));
+      else localStorage.removeItem(CANOPY_KEY);
+    } catch (e) {}
+  }
+  var canopy = loadCanopy();
+
+  function renderCanopy() {
+    var panel = $('canopy-panel');
+    if (canopy) {
+      panel.classList.add('done');
+      $('canopy-status').textContent = 'Completed at ' + canopy.time;
+      canopyBtn.textContent = 'Completed ✓';
+      canopyBtn.removeAttribute('href');
+      canopyBtn.style.pointerEvents = 'none';
+      $('canopy-reset').hidden = false;
+    } else {
+      panel.classList.remove('done');
+      $('canopy-status').textContent = '';
+      canopyBtn.textContent = 'Completed?';
+      canopyBtn.href = '#';
+      canopyBtn.style.pointerEvents = '';
+      $('canopy-reset').hidden = true;
+    }
+  }
+  canopyBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (canopy) return;
+    openPin('canopy', function () {
+      var d = new Date();
+      canopy = { date: todayStr(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+      saveCanopy(canopy);
+      renderCanopy();
+    });
+  });
+  $('canopy-reset').addEventListener('click', function () {
+    openPin('canopyreset', function () {
+      canopy = null;
+      saveCanopy(null);
+      renderCanopy();
+    });
+  });
+
+  // ---------- food tracker ----------
+  // Stored as { weeks: { 'YYYY-MM-DD (Monday)': { foodId: { skip, started, oven, ready } } } }
+  var foodData = loadFood();
+  var currentWeek = weekStart();
+
+  function loadFood() {
+    var data = { weeks: {} };
+    // localStorage backup first, then cookies (one cookie per week) win
+    try {
+      var v = JSON.parse(localStorage.getItem(FOOD_KEY));
+      if (v && v.weeks) data = v;
+    } catch (e) {}
+    cookieNames(FOOD_KEY + '-').forEach(function (n) {
+      try {
+        var items = JSON.parse(getCookie(n));
+        if (items) data.weeks[n.slice(FOOD_KEY.length + 1)] = items;
+      } catch (e) {}
+    });
+    return data;
+  }
+  function saveFood() {
+    // keep only the latest 12 weeks
+    var keys = Object.keys(foodData.weeks).sort();
+    while (keys.length > 12) {
+      var old = keys.shift();
+      delete foodData.weeks[old];
+      delCookie(FOOD_KEY + '-' + old);
+    }
+    if (foodData.weeks[currentWeek]) {
+      setCookie(FOOD_KEY + '-' + currentWeek, JSON.stringify(foodData.weeks[currentWeek]), 120);
+    }
+    try { localStorage.setItem(FOOD_KEY, JSON.stringify(foodData)); } catch (e) {}
+  }
+  function weekItems() {
+    if (!foodData.weeks[currentWeek]) foodData.weeks[currentWeek] = {};
+    return foodData.weeks[currentWeek];
+  }
+  function itemFor(id) {
+    var items = weekItems();
+    if (!items[id]) items[id] = {};
+    return items[id];
+  }
+  // The usual foods plus any extra ones added for this week
+  // Extra batches (e.g. "Cupcakes - batch 2") sit straight after the food they belong to
+  function allFoods() {
+    var extra = weekItems()._extra || [];
+    var out = [];
+    function addWithBatches(f) {
+      out.push(f);
+      extra.forEach(function (x) {
+        if (x.base === f.name) out.push({ id: x.id, name: x.name, extra: true, batch: true, base: x.base, n: x.n });
+      });
+    }
+    FOODS.forEach(addWithBatches);
+    extra.forEach(function (x) {
+      if (!x.base) addWithBatches({ id: x.id, name: x.name, extra: true });
+    });
+    return out;
+  }
+  // Add another batch of a food: it gets its own Starting / In oven / Ready buttons and timer
+  function addBatch(f) {
+    var base = f.base || f.name;
+    var items = weekItems();
+    if (!items._extra) items._extra = [];
+    var max = 1;
+    items._extra.forEach(function (x) { if (x.base === base && x.n > max) max = x.n; });
+    var n = max + 1;
+    items._extra.push({ id: 'x' + Date.now().toString(36), name: base + ' — batch ' + n, base: base, n: n });
+    saveFood();
+    renderFood();
+  }
+  function statusOf(it) {
+    if (it.skip) return 'skipped';
+    if (it.ready) return 'ready';
+    if (it.out) return 'out';
+    if (it.oven) return 'oven';
+    if (it.started) return 'started';
+    return 'none';
+  }
+  function statusText(it) {
+    var s = statusOf(it);
+    if (s === 'skipped') return 'Not making this week';
+    if (s === 'ready') return 'Ready for serving at ' + it.ready + (it.qty ? ' — ' + it.qty + ' ready' : '');
+    if (s === 'out') return 'Out of oven at ' + it.out;
+    if (s === 'oven') return 'In oven since ' + it.oven;
+    if (s === 'started') return 'Started at ' + it.started;
+    return 'Not started';
+  }
+
+  function renderFood() {
+    var grid = $('food-grid');
+    grid.textContent = '';
+    allFoods().forEach(function (f) {
+      var it = itemFor(f.id);
+      var s = statusOf(it);
+
+      var card = document.createElement('div');
+      card.className = 'food' + (s === 'skipped' ? ' skipped' : (s !== 'none' ? ' s-' + s : ''));
+
+      var name = document.createElement('div');
+      name.className = 'food-name';
+      name.textContent = f.name;
+      if (f.note) {
+        var sm = document.createElement('small');
+        sm.textContent = f.note;
+        name.appendChild(sm);
+      }
+
+      var status = document.createElement('div');
+      status.className = 'food-status';
+      status.textContent = statusText(it);
+
+      var steps = document.createElement('div');
+      steps.className = 'steps';
+      STEPS.forEach(function (st) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'step' + (it[st.id] ? ' on' : '');
+        b.setAttribute('data-step', st.id);
+        b.disabled = !!it.skip;
+        var l = document.createElement('span');
+        l.textContent = st.label;
+        var t = document.createElement('span');
+        t.className = 'st';
+        t.textContent = (it[st.id] || '') + (st.id === 'ready' && it.ready && it.qty ? ' · ' + it.qty : '');
+        b.appendChild(l);
+        b.appendChild(t);
+        b.addEventListener('click', function () {
+          function toggle() {
+            var cur = itemFor(f.id);
+            if (cur[st.id]) {                      // un-tick
+              delete cur[st.id];
+              if (st.id === 'oven') delete cur.ovenTs;
+              if (st.id === 'ready') delete cur.qty;
+              saveFood();
+              renderFood();
+            } else if (st.id === 'ready') {        // tick "Ready for serving": ask how many first
+              askQty(f.name, function (n) {
+                var c = itemFor(f.id);
+                c.ready = nowHM();
+                c.qty = n;
+                saveFood();
+                renderFood();
+              });
+            } else {                               // tick
+              cur[st.id] = nowHM();
+              if (st.id === 'oven') cur.ovenTs = Date.now();
+              saveFood();
+              renderFood();
+            }
+          }
+          // Ticking in order is free; un-ticking needs the code; skipping an earlier step (e.g. no oven) needs the code too.
+          var curIt = itemFor(f.id);
+          var skipsStep = false;
+          for (var j = 0; j < STEPS.length && STEPS[j].id !== st.id; j++) {
+            if (!curIt[STEPS[j].id]) skipsStep = true;
+          }
+          if (curIt[st.id]) openPin('undo', toggle);
+          else if (skipsStep) openPin('skip', toggle);
+          else toggle();
+        });
+        steps.appendChild(b);
+      });
+
+      var skip = document.createElement('button');
+      skip.type = 'button';
+      skip.className = 'skip-btn';
+      skip.textContent = it.skip ? 'Make this week after all' : 'Not making this week';
+      skip.addEventListener('click', function () {
+        // Both "Not making this week" and "Make this week after all" need the code.
+        openPin('do', function () {
+          var cur = itemFor(f.id);
+          cur.skip = !cur.skip;
+          if (!cur.skip) delete cur.skip;
+          saveFood();
+          renderFood();
+        });
+      });
+
+      card.appendChild(name);
+      card.appendChild(status);
+      card.appendChild(steps);
+      card.appendChild(skip);
+      if (!it.skip) {
+        var bb = document.createElement('button');
+        bb.type = 'button';
+        bb.className = 'skip-btn batch-btn';
+        bb.textContent = '+ Add another batch';
+        bb.addEventListener('click', function () {
+          openPin('do', function () { addBatch(f); });
+        });
+        card.appendChild(bb);
+      }
+      if (f.extra) {
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'remove-btn';
+        rm.textContent = f.batch ? 'Remove this batch' : 'Remove this food';
+        rm.addEventListener('click', function () {
+          openPin('do', function () {
+            var items = weekItems();
+            items._extra = (items._extra || []).filter(function (x) {
+              if (x.id === f.id) return false;
+              if (!f.batch && x.base === f.name) { delete items[x.id]; return false; }   // removing a food removes its batches
+              return true;
+            });
+            delete items[f.id];
+            saveFood();
+            renderFood();
+          });
+        });
+        card.appendChild(rm);
+      }
+      grid.appendChild(card);
+    });
+    renderTufs();
+    scheduleFit();
+  }
+
+  // ---------- TUFs needed (number box; changing it needs the code) ----------
+  var tufsInput = $('tufs-input');
+  // Total ready for serving so far: the numbers typed in when "Ready for serving" was ticked (foods not being made are ignored)
+  function readyTotal() {
+    var items = weekItems();
+    var total = 0;
+    allFoods().forEach(function (f) {
+      var it = items[f.id];
+      if (it && it.ready && !it.skip && it.qty) total += Number(it.qty) || 0;
+    });
+    return total;
+  }
+  function renderTufs() {
+    var v = weekItems()._tufs;
+    tufsInput.value = (v === undefined) ? '' : v;
+    var ready = readyTotal();
+    var readyLine = $('tufs-ready-line');
+    var leftRow = $('tufs-left-row');
+    var leftNum = $('tufs-left-num');
+    var tp = $('tufs-panel');
+    tp.classList.remove('met', 'under');
+    if (v === undefined || v === '') {
+      leftRow.hidden = true;
+      readyLine.textContent = 'Ready: ' + ready;
+    } else {
+      var left = (+v) - ready;
+      tp.classList.add(left <= 0 ? 'met' : 'under');
+      leftRow.hidden = false;
+      leftNum.textContent = Math.max(0, left);
+      leftNum.classList.toggle('done', left <= 0);
+      readyLine.textContent = 'Ready: ' + ready + (left < 0 ? ' (+' + (-left) + ' extra)' : '');
+    }
+  }
+  function startTufsEdit() {
+    if (!tufsInput.readOnly) return;
+    openPin('tufs', function () {
+      // wait a moment so the last code digit isn't typed into the box
+      setTimeout(function () {
+        tufsInput.readOnly = false;
+        tufsInput.classList.add('editing');
+        tufsInput.focus();
+        tufsInput.select();
+      }, 80);
+    });
+  }
+  function endTufsEdit() {
+    if (tufsInput.readOnly) return;
+    tufsInput.readOnly = true;
+    tufsInput.classList.remove('editing');
+    var v = tufsInput.value.trim();
+    var items = weekItems();
+    if (v === '') delete items._tufs;
+    else items._tufs = String(Math.max(0, Math.floor(+v) || 0));
+    saveFood();
+    renderTufs();
+    scheduleFit();
+  }
+  tufsInput.addEventListener('click', startTufsEdit);
+  $('tufs-edit').addEventListener('click', startTufsEdit);
+  tufsInput.addEventListener('blur', endTufsEdit);
+  tufsInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); tufsInput.blur(); }
+  });
+
+  // ---------- add a food for this week (needs the code) ----------
+  var addOverlay = $('add-overlay');
+  var addInput = $('add-input');
+  function openAdd() {
+    addInput.value = '';
+    addOverlay.hidden = false;
+    // wait a moment so the last code digit isn't typed into the box
+    setTimeout(function () { addInput.focus(); }, 80);
+  }
+  function closeAdd() { addOverlay.hidden = true; addInput.blur(); }
+  function commitAdd() {
+    var n = addInput.value.trim();
+    if (!n) return;
+    var items = weekItems();
+    if (!items._extra) items._extra = [];
+    items._extra.push({ id: 'x' + Date.now().toString(36), name: n });
+    saveFood();
+    closeAdd();
+    renderFood();
+  }
+  $('add-food-btn').addEventListener('click', function () { openPin('do', openAdd); });
+  $('add-ok').addEventListener('click', commitAdd);
+  $('add-cancel').addEventListener('click', closeAdd);
+  addInput.addEventListener('keydown', function (e) {
+    e.stopPropagation();   // keep typing away from the page's other key handlers
+    if (e.key === 'Enter') { e.preventDefault(); commitAdd(); }
+    else if (e.key === 'Escape') closeAdd();
+  });
+
+  // ---------- how many are ready for serving (asked when "Ready for serving" is ticked) ----------
+  var qtyOverlay = $('qty-overlay');
+  var qtyInput = $('qty-input');
+  var qtyBox = $('qty-box');
+  var qtyFn = null;
+  function askQty(name, fn) {
+    qtyFn = fn;
+    $('qty-title').textContent = 'How many ' + name + ' are ready for serving?';
+    qtyInput.value = '';
+    qtyOverlay.hidden = false;
+    setTimeout(function () { qtyInput.focus(); }, 80);
+  }
+  function closeQty() { qtyOverlay.hidden = true; qtyInput.blur(); qtyFn = null; qtyBox.classList.remove('bad'); }
+  function commitQty() {
+    var v = qtyInput.value.trim();
+    var n = Math.floor(+v);
+    if (v === '' || !isFinite(n) || n < 1) {
+      qtyBox.classList.add('bad');
+      setTimeout(function () { qtyBox.classList.remove('bad'); }, 450);
+      return;
+    }
+    var fn = qtyFn;
+    closeQty();
+    if (fn) fn(n);
+  }
+  $('qty-ok').addEventListener('click', commitQty);
+  $('qty-cancel').addEventListener('click', closeQty);
+  qtyInput.addEventListener('keydown', function (e) {
+    e.stopPropagation();   // keep typing away from the page's other key handlers
+    if (e.key === 'Enter') { e.preventDefault(); commitQty(); }
+    else if (e.key === 'Escape') closeQty();
+  });
+
+  function doResetFood() {
+    delete foodData.weeks[currentWeek];
+    delCookie(FOOD_KEY + '-' + currentWeek);
+    saveFood();
+    renderFood();
+  }
+
+  // ---------- weekly report (print / save as PDF) ----------
+  function el(tag, text, cls) {
+    var e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  }
+  function buildReport() {
+    var box = $('print-report');
+    box.textContent = '';
+
+    var monday = new Date(currentWeek + 'T12:00:00');
+    var fri = new Date(monday.getTime());
+    fri.setDate(fri.getDate() + 4);
+    var opts = { day: 'numeric', month: 'long', year: 'numeric' };
+
+    box.appendChild(el('h1', '👍 Thumbs Up Friday — Food Report'));
+    box.appendChild(el('div',
+      'Friday ' + fri.toLocaleDateString('en-GB', opts), 'sub'));
+
+    var tv = weekItems()._tufs;
+    box.appendChild(el('div', 'TUFs needed: ' + (tv === undefined ? '—' : tv), 'sub'));
+    var rdy = readyTotal();
+    box.appendChild(el('div', 'Ready for serving: ' + rdy +
+      (tv === undefined ? '' : '   |   Still needed: ' + Math.max(0, (+tv) - rdy)), 'sub'));
+
+    var table = document.createElement('table');
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    ['Food', 'Status', 'Started', 'In oven', 'Out of oven', 'Ready', 'Number'].forEach(function (h) {
+      hr.appendChild(el('th', h));
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    allFoods().forEach(function (f) {
+      var it = itemFor(f.id);
+      var s = statusOf(it);
+      var tr = document.createElement('tr');
+      if (s === 'skipped') tr.className = 'skip';
+      tr.appendChild(el('td', f.name + (f.note ? ' (' + f.note + ')' : '')));
+      if (s === 'skipped') {
+        tr.appendChild(el('td', 'Not made this week'));
+        for (var k = 0; k < 5; k++) tr.appendChild(el('td', '—'));
+      } else {
+        tr.appendChild(el('td',
+          s === 'ready' ? 'Ready' : s === 'out' ? 'Out of oven' : s === 'oven' ? 'In oven' : s === 'started' ? 'Started' : 'Not started'));
+        tr.appendChild(el('td', it.started || '—'));
+        tr.appendChild(el('td', it.oven || '—'));
+        tr.appendChild(el('td', it.out ? '✓' : '—'));
+        tr.appendChild(el('td', it.ready ? '✓' : '—'));
+        tr.appendChild(el('td', it.qty || '—'));
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    box.appendChild(table);
+  }
+
+  // Printing makes the browser leave full screen. That is expected, so it must
+  // not trigger the red "you should not have exited" warning.
+  var printing = false;
+  var printTimer = null;
+  function afterPrint() {
+    if (!printing || printTimer) return;
+    // The browser reports "left full screen" a moment AFTER printing ends, so keep
+    // ignoring that for a short while before deciding what to show.
+    printTimer = setTimeout(function () {
+      printTimer = null;
+      printing = false;
+      if (wantFs && !isFs()) {
+        try { enterFs(); } catch (e) {}          // works if the browser still allows it
+        setTimeout(function () {
+          if (wantFs && !isFs()) $('fs-soft').hidden = false;   // otherwise one tap puts it back
+        }, 500);
+      }
+    }, 1200);
+  }
+  window.addEventListener('afterprint', afterPrint);
+  function doPrint() {
+    buildReport();
+    printing = true;
+    window.print(); // choose "Save as PDF" as the destination
+    afterPrint();
+  }
+  $('print-btn').addEventListener('click', function () {
+    if (isFs()) openPin('print');   // in full screen, the code is needed first
+    else doPrint();
+  });
+
+  // ---------- auto-fit: shrink the layout so everything stays in view ----------
+  var fitQueued = false;
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fit(); });
+  }
+  function fit() {
+    var main = document.querySelector('.hub-main');
+    var nav = document.querySelector('body.hub > nav');
+    if (!main) return;
+    var foot = document.querySelector('body.hub > footer');
+    var avail = window.innerHeight - (nav ? nav.offsetHeight : 0) - (foot ? foot.offsetHeight : 0) - 2;
+
+    // Does the content fit at scale s? (Widening the box by 1/s keeps it
+    // filling the screen width once it has been scaled.)
+    function fits(s) {
+      main.style.width = (100 / s) + '%';
+      main.style.maxWidth = 'none';
+      return main.offsetHeight * s <= avail;
+    }
+
+    // Find the biggest scale (shrinking OR enlarging) at which everything still
+    // fits on screen, so the page always uses as much of the screen as possible.
+    main.style.transform = '';
+    var lo = 0.25, hi = 3;
+    if (fits(hi)) {
+      lo = hi;
+    } else {
+      for (var i = 0; i < 12; i++) {
+        var mid = (lo + hi) / 2;
+        if (fits(mid)) lo = mid; else hi = mid;
+      }
+    }
+    if (lo > 0.99 && lo < 1.01) lo = 1;     // about 1: no scaling needed
+    fits(lo);
+    if (lo === 1) { main.style.width = ''; main.style.maxWidth = ''; }
+
+    // Centre whatever space is left over (the width is already full), so the
+    // boxes sit in the middle of the screen rather than stuck to the top.
+    var y = Math.max(0, (avail - main.offsetHeight * lo) / 2);
+    main.style.transform = (lo === 1 && y < 1) ? '' :
+      'translateY(' + y.toFixed(1) + 'px) scale(' + lo + ')';
+
+    // Put the footer in the middle of the space between the boxes and the bottom of the screen.
+    if (foot) {
+      var navH = nav ? nav.offsetHeight : 0;
+      var contentBottom = navH + y + main.offsetHeight * lo;
+      var below = window.innerHeight - contentBottom;
+      var top = contentBottom + Math.max(0, (below - foot.offsetHeight) / 2);
+      foot.style.top = top.toFixed(1) + 'px';
+      foot.style.bottom = 'auto';
+    }
+  }
+  window.addEventListener('resize', scheduleFit);
+  window.addEventListener('load', scheduleFit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+
+  // ---------- clock ----------
+  var currentDay = todayStr();
+  var fitTicks = 0;
+
+  // ---------- full screen toggle (button doubles as the way back out) ----------
+  var fsBtn = $('fs-btn');
+  var fsRoot = document.documentElement;
+  var fsSupported = !!(fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen);
+  var wantFs = false;   // true while the screen is meant to be full screen
+  function isFs() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+  // Marks the page as 'full screen' (browser full screen, F11 or kiosk) so the admin buttons can hide
+  function syncFsClass() {
+    var full = isFs() || (window.innerHeight >= screen.height - 1 && window.innerWidth >= screen.width - 1);
+    var root = document.documentElement;
+    if (root.classList.contains('is-fs') !== full) {
+      root.classList.toggle('is-fs', full);
+      scheduleFit();
+    }
+  }
+  window.addEventListener('resize', syncFsClass);
+  function updateFs() {
+    syncFsClass();
+    fsBtn.textContent = isFs() ? '🔒 Exit full screen' : '⛶ Full screen';
+    // Left full screen without the code (e.g. the browser's X)? Cover the page.
+    if (isFs()) $('fs-soft').hidden = true;
+    if (!printing) $('fs-return').hidden = isFs() || !wantFs;
+    if (!isFs() && wantFs && !printing) requestFs();   // try to go straight back in
+    if (!isFs()) {
+      closePin();
+      try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
+    }
+    scheduleFit();
+  }
+  function exitFs() {
+    wantFs = false;   // exit authorised with the code
+    $('fs-return').hidden = true;
+    $('fs-soft').hidden = true;
+    try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+  }
+
+  // Exit code. Change this to whatever you like (4 digits is the tidiest).
+  // PEOPLE WHO CAN USE THE HUB. Add a line to add someone. Every code must be 4 digits.
+  //   all: true            = full control
+  //   can: [...]           = only these things:  'reg' (take the register), 'canopy' (List For Canopy),
+  //                          'tufs' (change TUFs Needed), 'undo' (un-tick a food step)
+  //   limitedIfNotFirst    = full control when they are the FIRST person to log in that day;
+  //                          if someone else (Charlie) logged in first, they can only do the things in limited: [...]
+  // Log in, hide/unlock the dashboard and log out: Charlie always. Mrs Delaney only if she logged in first
+  // (or nobody has logged in yet today, in which case logging in makes her the first).
+  var USERS = [
+    { name: 'Charlie Ivin',  pin: '3756', all: true },
+    { name: 'Mrs T Delaney', pin: '7405', all: true, limitedIfNotFirst: true, limited: ['reg', 'canopy', 'tufs', 'undo'] }
+  ];
+  var EXIT_PIN = USERS[0].pin;   // only used for the length of the code
+  var currentUser = null;        // who logged in (shown in the welcome message)
+
+  // What each code prompt needs. Anything not listed here is full access only.
+  var PERM_FOR = {
+    'reg': 'reg', 'reset-reg': 'reg',
+    'canopy': 'canopy', 'canopyreset': 'canopy',
+    'tufs': 'tufs',
+    'undo': 'undo',
+    'skip': 'skip',
+    'exit': 'exit',
+    'unlock': 'any', 'hide': 'any', 'logout': 'any'
+  };
+  // Who logged in first today (saved on this PC for the day)
+  var FIRST_KEY = 'tuf-first-login-v1';
+  // Not saved on the PC any more: it only lasts for the current login. Logging out (or closing the tab) clears it.
+  try { localStorage.removeItem(FIRST_KEY); } catch (e) {}   // remove the old saved value
+  function firstLoginName() {
+    try {
+      var v = JSON.parse(sessionStorage.getItem(FIRST_KEY));
+      if (v && v.day === todayStr()) return v.name;
+    } catch (e) {}
+    return null;
+  }
+  function setFirstLogin(name) {
+    try { sessionStorage.setItem(FIRST_KEY, JSON.stringify({ day: todayStr(), name: name })); } catch (e) {}
+  }
+  function clearFirstLogin() {
+    try { sessionStorage.removeItem(FIRST_KEY); } catch (e) {}
+  }
+  function userForPin(code, action) {
+    var perm = PERM_FOR[action] || 'admin';
+    for (var i = 0; i < USERS.length; i++) {
+      var u = USERS[i];
+      if (u.pin !== code) continue;
+      var ok;
+      if (perm === 'any') ok = !u.limitedIfNotFirst || !firstLoginName() || firstLoginName() === u.name;   // log in / hide / unlock / log out: not allowed for her if someone else logged in first
+      else if (u.limitedIfNotFirst) ok = (firstLoginName() === u.name) || (u.limited && u.limited.indexOf(perm) > -1);
+      else ok = !!u.all || !!(u.can && u.can.indexOf(perm) > -1);
+      if (!ok) continue;
+      // leaving full screen: this person's code only works if they are the one who logged in
+      if (perm === 'exit' && u.limitedIfNotFirst && currentUser !== u) continue;
+      return u;
+    }
+    return null;
+  }
+  var pinEntry = '';
+  var pinOverlay = $('pin-overlay');
+  var pinBox = $('pin-box');
+  var pinDots = $('pin-dots');
+  var pinKeys = $('pin-keys');
+
+  function renderPin() {
+    pinDots.textContent = '';
+    for (var i = 0; i < EXIT_PIN.length; i++) {
+      var d = document.createElement('span');
+      if (i < pinEntry.length) d.className = 'on';
+      pinDots.appendChild(d);
+    }
+  }
+  var pinAction = 'exit';
+  var pinFn = null;
+  function openPin(action, fn) {
+    pinAction = action || 'exit';
+    pinFn = fn || null;
+    pinBox.querySelector('.pin-title').textContent =
+      pinAction === 'print' ? 'Type the code to print' :
+      pinAction === 'exit' ? 'Type the code to exit' :
+      pinAction === 'do' ? 'Type the code to change this' :
+      pinAction === 'tufs' ? 'Type the code to change this' :
+      pinAction === 'reg' ? 'Enter code if you have taken the register' :
+      pinAction === 'resetall' ? 'Enter the pin to reset everything' :
+      pinAction === 'logout' ? 'Enter the pin to log out' :
+      pinAction === 'hide' ? 'Enter the pin to hide the dashboard' :
+      pinAction === 'unlock' ? 'Enter the pin to continue' :
+      pinAction === 'undo' ? 'Enter the pin to undo this' :
+      pinAction === 'skip' ? 'Enter the pin to skip a step' :
+      pinAction === 'canopyreset' ? 'Type the code to change this' :
+      pinAction === 'canopy' ? 'Enter code if you have printed the list' : 'Type the code to reset';
+    pinTitleText = pinBox.querySelector('.pin-title').textContent;
+    pinEntry = '';
+    renderPin();
+    pinOverlay.hidden = false;
+    applyLockMsgs();
+  }
+  function closePin() { pinOverlay.hidden = true; pinEntry = ''; pinFn = null; pinBox.classList.remove('bad'); }
+  function pinDigit(d) {
+    if (lockLeft() > 0) { applyLockMsgs(); return; }   // locked out after too many wrong codes
+    if (pinEntry.length >= EXIT_PIN.length) return;
+    pinEntry += d;
+    renderPin();
+    if (pinEntry.length === EXIT_PIN.length) {
+      if (userForPin(pinEntry, pinAction)) {
+        var action = pinAction, fn = pinFn;
+        clearWrong();
+        closePin();
+        if (action === 'print') doPrint();
+        else if (action === 'do' || action === 'reg' || action === 'canopy' || action === 'tufs' || action === 'unlock' || action === 'hide' || action === 'logout' || action === 'resetall' || action === 'undo' || action === 'skip' || action === 'canopyreset') { if (fn) fn(); }
+        else if (action === 'reset-reg') doResetReg();
+        else if (action === 'reset-food') doResetFood();
+        else exitFs();
+      } else {
+        // a real code that is just not allowed to do this
+        var knownCode = false;
+        for (var ui = 0; ui < USERS.length; ui++) {
+          if (USERS[ui].pin === pinEntry) { pinBox.querySelector('.pin-title').textContent = 'This code cannot do that'; knownCode = true; }
+        }
+        if (!knownCode) noteWrong();   // only a code that does not exist counts as a wrong guess
+        pinBox.classList.add('bad');
+        setTimeout(function () { pinBox.classList.remove('bad'); pinEntry = ''; renderPin(); applyLockMsgs(); }, 450);
+      }
+    }
+  }
+  // No on-screen number keys: the code is typed on the keyboard.
+  var cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'small';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', closePin);
+  pinKeys.appendChild(cancelBtn);
+  document.addEventListener('keydown', function (e) {
+    // With Chrome's keyboard lock active, a tap of Esc reaches the page
+    // (instead of leaving full screen), so use it to ask for the code.
+    if (e.key === 'Escape' && isFs() && pinOverlay.hidden && !e.repeat) { openPin(); return; }
+    if (e.key === 'Escape' && !pinOverlay.hidden && !e.repeat) { closePin(); return; }
+    if (pinOverlay.hidden) return;
+    if (/^[0-9]$/.test(e.key)) pinDigit(e.key);
+    else if (e.key === 'Backspace') { pinEntry = pinEntry.slice(0, -1); renderPin(); }
+  });
+
+  // ---------- hide dashboard: blurs the page until the code is entered ----------
+  var lockScreen = $('lock-screen');
+  var lockGuard = false;
+  function setLocked(on) {
+    lockScreen.hidden = !on;
+    // The last digit of the code that just locked the screen must not count as a new code
+    if (on) { lockGuard = true; setTimeout(function () { lockGuard = false; }, 500); }
+    var m = document.querySelector('.hub-main');
+    if (m) m.inert = on;          // also stops keyboard (Tab/Enter) use while hidden
+  }
+  function askUnlock() {
+    if (pinOverlay.hidden) openPin('unlock', function () { setLocked(false); });
+  }
+  // Reset all: clears this week's food board (incl. added foods, batches and TUFs needed),
+  // the Register tick and the List For Canopy tick. Needs the code.
+  $('reset-all-btn').addEventListener('click', function () {
+    openPin('resetall', function () {
+      doResetFood();
+      doResetReg();
+      canopy = null;
+      saveCanopy(null);
+      renderCanopy();
+    });
+  });
+  $('hide-btn').addEventListener('click', function () {
+    openPin('hide', function () { setLocked(true); });   // the code is needed to hide it too
+  });
+  lockScreen.addEventListener('click', askUnlock);
+  // Typing a number on the keyboard while locked opens the code box and enters it
+  document.addEventListener('keydown', function (e) {
+    if (lockGuard || lockScreen.hidden || !pinOverlay.hidden) return;
+    if (/^[0-9]$/.test(e.key)) { openPin('unlock', function () { setLocked(false); }); pinDigit(e.key); }
+  });
+
+  // ---------- entry gate: code needed the first time the page is opened ----------
+  // Remembered for this browser tab only, so closing the tab and reopening asks again.
+  var GATE_KEY = 'tuf-gate-ok-v1';
+  var GATE_PIN = EXIT_PIN;          // change this line to use a different code just for entry
+  var gate = $('gate');
+  var gateBox = $('gate-box');
+  var gateDots = $('gate-dots');
+  var gateEntry = '';
+  var gateGuard = false;   // ignore the key press that just logged out
+  function gateUnlocked() {
+    try { return sessionStorage.getItem(GATE_KEY) === '1'; } catch (e) { return false; }
+  }
+  function renderGate() {
+    gateDots.textContent = '';
+    for (var i = 0; i < GATE_PIN.length; i++) {
+      var d = document.createElement('span');
+      if (i < gateEntry.length) d.className = 'on';
+      gateDots.appendChild(d);
+    }
+  }
+  function gateDigit(d) {
+    if (lockLeft() > 0) { applyLockMsgs(); return; }
+    if (gateEntry.length >= GATE_PIN.length) return;
+    gateEntry += d;
+    renderGate();
+  }
+  // Welcome / trained-staff notice in the middle of the screen after logging in
+  var welcomeEl = $('welcome');
+  var welcomeTimer = null;
+  function hideWelcome() {
+    clearTimeout(welcomeTimer);
+    welcomeEl.hidden = true;
+    welcomeEl.classList.remove('show');
+  }
+  function showWelcome() {
+    hideWelcome();
+    var name = currentUser ? currentUser.name : '';
+    $('welcome-title').textContent = 'Welcome' + (name ? ', ' + name : '');
+    $('welcome-ask').textContent = name
+      ? 'Please confirm that you are ' + name + ' and that you have been trained to use the Managing Hub.'
+      : 'Please confirm that you have been trained to use the Managing Hub.';
+    if (currentUser && currentUser.limitedIfNotFirst && firstLoginName() !== currentUser.name) {
+      $('welcome-ask').textContent += ' ' + firstLoginName() + ' logged in first today, so you can take the Register, do the List For Canopy, change TUFs Needed and undo food steps.';
+    }
+    $('welcome-ok').textContent = name ? 'Yes, I am ' + name : 'Yes, I confirm';
+    welcomeEl.hidden = false;
+    void welcomeEl.offsetWidth;          // restart the fade animation
+    welcomeEl.classList.add('show');
+  }
+  $('welcome-ok').addEventListener('click', hideWelcome);   // stays until one of the two buttons is pressed
+  // "No, that is not me": straight back to the login screen
+  $('welcome-no').addEventListener('click', function () {
+    hideWelcome();
+    try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
+    clearFirstLogin();
+    currentUser = null;
+    setLocked(false);
+    gateEntry = '';
+    renderGate();
+    gate.hidden = false;
+  });
+
+  // The code is only checked when Login is pressed (or Enter)
+  function gateSubmit() {
+    if (gate.hidden || gateGuard) return;
+    if (lockLeft() > 0) { applyLockMsgs(); return; }
+    var who = userForPin(gateEntry, 'unlock');   // 'unlock' = anyone with a code may log in
+    if (who) {
+      clearWrong();
+      currentUser = who;
+      if (!firstLoginName()) setFirstLogin(who.name);   // the first login of the day decides who has full control
+      try { sessionStorage.setItem('tuf-user-v1', who.name); } catch (e) {}
+      try { sessionStorage.setItem(GATE_KEY, '1'); } catch (e) {}
+      gate.hidden = true;
+      gateEntry = '';
+      renderGate();
+      scheduleFit();
+      showWelcome();
+    } else {
+      var knownGate = USERS.some(function (u) { return u.pin === gateEntry; });
+      if (!knownGate) noteWrong();   // only a code that does not exist counts as a wrong guess
+      gateBox.classList.add('bad');
+      setTimeout(function () { gateBox.classList.remove('bad'); gateEntry = ''; renderGate(); applyLockMsgs(); }, 450);
+    }
+  }
+  $('gate-login').addEventListener('click', gateSubmit);
+  document.addEventListener('keydown', function (e) {
+    if (gate.hidden || gateGuard) return;
+    if (/^[0-9]$/.test(e.key)) gateDigit(e.key);
+    else if (e.key === 'Backspace') { gateEntry = gateEntry.slice(0, -1); renderGate(); }
+    else if (e.key === 'Enter') { e.preventDefault(); gateSubmit(); }
+  });
+  gate.hidden = gateUnlocked();
+  // remember who logged in if the page is reloaded
+  try {
+    var savedUser = sessionStorage.getItem('tuf-user-v1');
+    if (savedUser && gate.hidden) USERS.forEach(function (u) { if (u.name === savedUser) currentUser = u; });
+  } catch (e) {}
+  renderGate();
+
+  // ---------- wrong-code lockout ----------
+  // After MAX_TRIES wrong codes in a row (on the login screen or any keypad), no codes are accepted for LOCK_SECS seconds.
+  // Saved on this PC so reloading the page does not get around it. A correct code clears the count.
+  var LOCK_KEY = 'tuf-lockout-v1';
+  var MAX_TRIES = 5;
+  var LOCK_SECS = 30;
+  var pinTitleText = 'Type the code';
+  var lockMsgShown = false;
+  function lockState() {
+    try { var v = JSON.parse(localStorage.getItem(LOCK_KEY)); if (v) return v; } catch (e) {}
+    return { fails: 0, until: 0 };
+  }
+  function saveLock(v) { try { localStorage.setItem(LOCK_KEY, JSON.stringify(v)); } catch (e) {} }
+  function lockLeft() { return Math.max(0, Math.ceil((lockState().until - Date.now()) / 1000)); }
+  function noteWrong() {
+    var v = lockState();
+    v.fails = (v.fails || 0) + 1;
+    if (v.fails >= MAX_TRIES) { v.fails = 0; v.until = Date.now() + LOCK_SECS * 1000; }
+    saveLock(v);
+  }
+  function clearWrong() { saveLock({ fails: 0, until: 0 }); }
+  function applyLockMsgs() {
+    var left = lockLeft();
+    var pt = pinBox.querySelector('.pin-title');
+    var gt = gateBox.querySelector('.pin-title');
+    if (left > 0) {
+      var msg = 'Too many wrong codes. Wait ' + left + 's';
+      pt.textContent = msg;
+      gt.textContent = msg;
+      lockMsgShown = true;
+    } else if (lockMsgShown) {
+      lockMsgShown = false;
+      pt.textContent = pinTitleText;
+      gt.textContent = 'Type the code to open';
+    }
+  }
+  setInterval(applyLockMsgs, 1000);
+
+  // ---------- log out: needs the code, leaves full screen and brings the entry code screen back ----------
+  $('logout-btn').addEventListener('click', function () {
+    openPin('logout', function () {
+      try { sessionStorage.removeItem(GATE_KEY); sessionStorage.removeItem('tuf-user-v1'); } catch (e) {}
+      clearFirstLogin();
+      currentUser = null;
+      setLocked(false);
+      if (isFs()) exitFs();
+      gateEntry = '';
+      renderGate();
+      gate.hidden = false;
+      // the last digit of the logout code must not count as the first digit of the login code
+      gateGuard = true;
+      setTimeout(function () { gateGuard = false; gateEntry = ''; renderGate(); }, 500);
+    });
+  });
+
+  // Ctrl/Cmd+P opens the browser print dialog, which drops you out of full screen.
+  // Intercept it: in full screen ask for the code first, otherwise print the report.
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!pinOverlay.hidden) return;   // keypad already open
+      if (isFs()) openPin('print');
+      else doPrint();
+    }
+  }, true);
+
+  // Block right-click / context menu everywhere on the page
+  document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+
+  // Ctrl/Cmd+W closes the tab. Browsers treat this as a reserved shortcut, so
+  // a page can't always stop it, but in full screen we try to swallow it (with
+  // keyboard lock above) and, as a safety net, ask the browser to confirm
+  // before the tab is closed or reloaded.
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  // Block reload (Ctrl/Cmd+R, Ctrl+Shift+R, F5, Ctrl+F5) and F11.
+  document.addEventListener('keydown', function (e) {
+    var isReload = ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) || e.key === 'F5' || e.key === 'F11';
+    if (isReload) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+  window.addEventListener('beforeunload', function (e) {
+    if (gate && !gate.hidden) return;   // login screen showing: let the link in the info box work
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+
+  function requestFs() {
+    try {
+      var p = (fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen).call(fsRoot);
+      // Where supported (Chrome/Edge), lock keys so they reach the page
+      if (p && p.then) p.then(function () {
+        try { if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape', 'KeyW', 'KeyR', 'F5', 'F11']); } catch (e) {}
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function enterFs() {
+    wantFs = true;
+    requestFs();   // the covers go away by themselves once full screen is really back
+  }
+  $('fs-return').addEventListener('click', enterFs);
+  // On the red screen, ANY click, tap or key press puts it back in full screen
+  // (the browser only allows full screen straight after a click or key press).
+  ['pointerdown', 'pointerup', 'click', 'touchend', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      if (ev === 'keydown' && e.key === 'Escape') return;
+      if (!$('fs-return').hidden || !$('fs-soft').hidden) enterFs();
+    }, true);
+  });
+  $('fs-soft').addEventListener('click', enterFs);   // a tap is the gesture the browser needs
+
+  if (!fsSupported) {
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener('click', function () {
+      try {
+        if (isFs()) {
+          openPin();                                  // code needed to leave
+        } else {
+          enterFs();
+        }
+      } catch (e) {}
+    });
+    document.addEventListener('fullscreenchange', updateFs);
+    document.addEventListener('webkitfullscreenchange', updateFs);
+  }
+
+  // While the red screen is showing, keep trying to go back into full screen every
+  // 2 seconds. Browsers often refuse this unless it follows a click or key press,
+  // so a click or key press on the red screen is the part that always works.
+  setInterval(function () {
+    if (wantFs && !isFs() && !printing) requestFs();
+  }, 2000);
+
+  function tick() {
+    var d = new Date();
+    var nowSec = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
+
+    $('clock').innerHTML = pad(d.getHours()) + ':' + pad(d.getMinutes()) + '<small>:' + pad(d.getSeconds()) + '</small>';
+    $('date').textContent = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    // New day: the tick resets itself automatically.
+    if (todayStr(d) !== currentDay) {
+      currentDay = todayStr(d);
+      reg = loadReg();
+      renderReg();
+      canopy = loadCanopy();
+      renderCanopy();
+      // New week: food board starts fresh automatically.
+      var wk = weekStart(d);
+      if (wk !== currentWeek) {
+        currentWeek = wk;
+        renderFood();
+      }
+    }
+    renderEvents(nowSec);
+    if (++fitTicks % 10 === 0) scheduleFit(); // catches long event titles etc.
+  }
+
+  // ---------- content ----------
+  // Footer text comes from content/site.json, the same file the rest of the site uses.
+  // Shown as plain text (not a link) so nobody can click out of the locked screen.
+  function loadFooter() {
+    return fetch('content/site.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (site) {
+        if (!site || !site.footer_text) return;
+        var url = String(site.footer_credit_url || '').replace(/^https?:\/\//, '');
+        $('hub-footer').textContent = site.footer_text + ' | ' + (site.footer_credit_label || '') + ' ' + url;
+        scheduleFit();
+      })
+      .catch(function () { /* keep the built-in footer text */ });
+  }
+
+  function loadContent() {
+    loadFooter();
+    return fetch('content/hub.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        events = prepareEvents(data.events);
+        buildSchedule();
+        tick();
+        scheduleFit();
+      })
+      .catch(function () { /* keep showing what we already have */ });
+  }
+
+  syncFsClass();
+  buildSchedule();
+  renderReg();
+  renderCanopy();
+  renderTimeToggle();
+  renderFood();
+  tick();
+  setInterval(tick, 1000);
+  loadContent();
+  setInterval(loadContent, 5 * 60 * 1000); // pick up CMS edits without a reload
+})();
+</script>
+
+</body>
+</html>

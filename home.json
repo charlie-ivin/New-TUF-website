@@ -1,0 +1,11 @@
+{
+  "hero_heading": "Earned a Thumbs Up Friday? Come and cash it in.",
+  "hero_paragraph": "Every Friday we cook for every student who's earned a Thumbs Up Friday card. Bring your card, pick your reward, cupcake, brownie, or whatever's on that week.",
+  "steps": [
+    { "number": "01", "title": "Earn a card", "text": "A member of staff gives you a Thumbs Up Friday card for something great! effort, kindness, achievement, anything worth celebrating." },
+    { "number": "02", "title": "Bring it on Friday", "text": "Every Friday we're cooking. Bring your card to the canopy at the time on the timetable and hand it over." },
+    { "number": "03", "title": "Pick your reward", "text": "Cupcake, brownie, or whatever we've made that week! your card, your treat." }
+  ],
+  "treats_heading": "What's baking this week?",
+  "treats_text": "Check the timetable page for collection times and this week's bake."
+}
