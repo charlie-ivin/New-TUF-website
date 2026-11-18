@@ -74,16 +74,6 @@
     color:#7E9E80;
     margin-bottom:6px;
   }
-  .url{
-    word-break:break-all;
-    font-size:.85rem;
-    background:#fff;
-    border:2px solid #e6d9c2;
-    border-radius:12px;
-    padding:10px 12px;
-    margin-top:12px;
-    color:#3E2723;
-  }
   .small{font-size:.85rem;color:#8a7a6a}
   .ok{color:#2E9E5B;font-weight:800;min-height:1.4em;text-align:center;margin-top:8px}
 </style>
@@ -98,10 +88,9 @@
     <div class="logo">📦</div>
     <h1>The app has moved</h1>
     <p>Thumbs Up Friday has a new home. The old app won’t be updated any more, so you need to reinstall it using the link below.</p>
-    <a class="btn" id="open" href="https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app">Open the new app</a>
+    <a class="btn" id="open" href="https://thumbs-up-friday.charlieivin.co.uk/manifest.webmanifest">Open the new app</a>
     <button class="btn alt" id="copy" type="button">Copy the link</button>
     <div class="ok" id="ok" role="status"></div>
-    <div class="url" id="url">https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app</div>
   </section>
 
   <section class="card">
@@ -131,10 +120,10 @@
 
 <script>
 (function () {
-  var LINK = 'https://sites.google.com/cottesloe.bucks.sch.uk/thumbs-up-friday/app';
+  var LINK = 'https://thumbs-up-friday.charlieivin.co.uk/manifest.webmanifest';
   var ok = document.getElementById('ok');
   function done(good) {
-    ok.textContent = good ? 'Link copied!' : 'Press and hold the link above to copy it.';
+    ok.textContent = good ? 'Link copied!' : 'Couldn’t copy. Tap Open the new app instead.';
   }
   document.getElementById('copy').addEventListener('click', function () {
     if (navigator.clipboard && navigator.clipboard.writeText) {
